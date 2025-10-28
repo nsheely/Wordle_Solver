@@ -126,7 +126,7 @@ mod tests {
         writeln!(temp_file, "toolongword").unwrap(); // Too long
         writeln!(temp_file, "abc").unwrap(); // Too short
         writeln!(temp_file, "slate").unwrap();
-        writeln!(temp_file, "").unwrap(); // Empty line
+        writeln!(temp_file).unwrap(); // Empty line
         writeln!(temp_file, "   ").unwrap(); // Whitespace only
         writeln!(temp_file, "irate").unwrap();
         temp_file.flush().unwrap();
