@@ -16,15 +16,17 @@ use rayon::prelude::*;
 /// Returns `None` if the guess pool is empty.
 #[must_use]
 pub fn select_minimax_first<'a>(
-    guess_pool: &'a [&'a Word],
-    candidates: &[&Word],
+    guess_pool: &'a [Word],
+    candidates: &[Word],
     epsilon: f64,
 ) -> Option<&'a Word> {
+    let candidate_refs: Vec<&Word> = candidates.iter().collect();
+
     // Compute all metrics since we need both max_partition and entropy (parallelized)
     let metrics: Vec<_> = guess_pool
         .par_iter()
-        .map(|&guess| {
-            let m = calculate_metrics(guess, candidates);
+        .map(|guess| {
+            let m = calculate_metrics(guess, &candidate_refs);
             let is_candidate = candidates.iter().any(|c| c.text() == guess.text());
             (guess, m, is_candidate)
         })
@@ -79,15 +81,17 @@ pub fn select_minimax_first<'a>(
 /// Returns `None` if the guess pool is empty.
 #[must_use]
 pub fn select_with_candidate_preference<'a>(
-    guess_pool: &'a [&'a Word],
-    candidates: &[&Word],
+    guess_pool: &'a [Word],
+    candidates: &[Word],
     epsilon: f64,
 ) -> Option<&'a Word> {
+    let candidate_refs: Vec<&Word> = candidates.iter().collect();
+
     // First pass: just entropy (parallelized)
     let entropies: Vec<_> = guess_pool
         .par_iter()
-        .map(|&guess| {
-            let ent = calculate_entropy(guess, candidates);
+        .map(|guess| {
+            let ent = calculate_entropy(guess, &candidate_refs);
             (guess, ent)
         })
         .collect();
@@ -110,7 +114,7 @@ pub fn select_with_candidate_preference<'a>(
         .filter(|(_, e)| (max_entropy - e) < epsilon)
         .map(|(guess, ent)| {
             let is_candidate = candidates.iter().any(|c| c.text() == guess.text());
-            let m = calculate_metrics(guess, candidates);
+            let m = calculate_metrics(guess, &candidate_refs);
             (guess, ent, m.max_partition, is_candidate)
         })
         .collect();
@@ -148,10 +152,7 @@ mod tests {
             Word::new("slate").unwrap(),
         ];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let result = select_minimax_first(&guess_refs, &candidate_refs, 0.1);
+        let result = select_minimax_first(&guesses, &candidates, 0.1);
         assert!(result.is_some());
 
         let best = result.unwrap();
@@ -168,11 +169,8 @@ mod tests {
         ];
         let candidates = [Word::new("irate").unwrap(), Word::new("crate").unwrap()];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
         // With small epsilon, should prefer candidate if metrics are close
-        let result = select_minimax_first(&guess_refs, &candidate_refs, 0.5);
+        let result = select_minimax_first(&guesses, &candidates, 0.5);
         assert!(result.is_some());
 
         let best = result.unwrap();
@@ -194,10 +192,7 @@ mod tests {
             Word::new("grate").unwrap(),
         ];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let result = select_with_candidate_preference(&guess_refs, &candidate_refs, 0.5);
+        let result = select_with_candidate_preference(&guesses, &candidates, 0.5);
         assert!(result.is_some());
 
         let best = result.unwrap();
@@ -214,10 +209,7 @@ mod tests {
         ];
         let candidates = [Word::new("crane").unwrap(), Word::new("irate").unwrap()];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let result = select_with_candidate_preference(&guess_refs, &candidate_refs, 0.5);
+        let result = select_with_candidate_preference(&guesses, &candidates, 0.5);
         assert!(result.is_some());
 
         let best = result.unwrap();
@@ -228,21 +220,19 @@ mod tests {
 
     #[test]
     fn minimax_first_returns_none_on_empty() {
-        let guesses: Vec<&Word> = vec![];
+        let guesses: Vec<Word> = vec![];
         let candidates = [Word::new("slate").unwrap()];
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
 
-        let result = select_minimax_first(&guesses, &candidate_refs, 0.1);
+        let result = select_minimax_first(&guesses, &candidates, 0.1);
         assert!(result.is_none());
     }
 
     #[test]
     fn candidate_preference_returns_none_on_empty() {
-        let guesses: Vec<&Word> = vec![];
+        let guesses: Vec<Word> = vec![];
         let candidates = [Word::new("slate").unwrap()];
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
 
-        let result = select_with_candidate_preference(&guesses, &candidate_refs, 0.1);
+        let result = select_with_candidate_preference(&guesses, &candidates, 0.1);
         assert!(result.is_none());
     }
 
@@ -260,10 +250,7 @@ mod tests {
             Word::new("greed").unwrap(),
         ];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let result = select_minimax_first(&guess_refs, &candidate_refs, 0.05);
+        let result = select_minimax_first(&guesses, &candidates, 0.05);
         assert!(result.is_some());
 
         let best = result.unwrap();

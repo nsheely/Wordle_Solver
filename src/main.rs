@@ -105,10 +105,9 @@ fn load_wordlists(wordlist_mode: &str) -> Result<(Vec<Word>, Vec<Word>)> {
             Ok((answer_words.clone(), answer_words))
         }
         path => {
-            // Load from custom file
+            // Load from custom file - use for both guessing and answers
             let custom_words = load_from_file(path)?;
-            let answer_words = words_from_slice(ANSWERS);
-            Ok((custom_words, answer_words))
+            Ok((custom_words.clone(), custom_words))
         }
     }
 }

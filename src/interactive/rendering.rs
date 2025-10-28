@@ -246,8 +246,17 @@ fn render_info_panel(f: &mut Frame, app: &App, area: Rect) {
 
 fn render_search_progress(f: &mut Frame, app: &App, area: Rect) {
     let total_bits = 11.18; // log2(2315) - maximum entropy
-    let bits_gained: f64 = app.history.iter().map(|h| h.entropy).sum();
     let current_candidates = app.get_candidates_count();
+
+    // Calculate actual information gained: log2(initial) - log2(current)
+    let initial_candidates = 2315_f64;
+    let bits_gained = if current_candidates > 0 {
+        initial_candidates.log2() - (current_candidates as f64).log2()
+    } else {
+        // Solved: gained all bits
+        total_bits
+    };
+
     let progress_pct = ((bits_gained / total_bits * 100.0).min(100.0)) as u16;
 
     let gauge = Gauge::default()

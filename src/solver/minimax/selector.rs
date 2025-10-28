@@ -25,10 +25,7 @@ use rayon::prelude::*;
 ///     Word::new("irate").unwrap(),
 /// ];
 ///
-/// let guess_refs: Vec<&Word> = guesses.iter().collect();
-/// let candidate_refs: Vec<&Word> = candidates.iter().collect();
-///
-/// let result = select_best_guess(&guess_refs, &candidate_refs);
+/// let result = select_best_guess(&guesses, &candidates);
 /// assert!(result.is_some());
 /// let (best, max_remaining) = result.unwrap();
 /// // CRANE should be better than AAAAA for these candidates
@@ -36,13 +33,15 @@ use rayon::prelude::*;
 /// ```
 #[must_use]
 pub fn select_best_guess<'a>(
-    guess_pool: &'a [&'a Word],
-    candidates: &[&Word],
+    guess_pool: &'a [Word],
+    candidates: &[Word],
 ) -> Option<(&'a Word, usize)> {
+    let candidate_refs: Vec<&Word> = candidates.iter().collect();
+
     guess_pool
         .par_iter()
-        .map(|&guess| {
-            let max_remaining = calculate_max_remaining(guess, candidates);
+        .map(|guess| {
+            let max_remaining = calculate_max_remaining(guess, &candidate_refs);
             (guess, max_remaining)
         })
         .min_by_key(|(_, max)| *max)
@@ -65,10 +64,7 @@ mod tests {
             Word::new("grate").unwrap(),
         ];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let result = select_best_guess(&guess_refs, &candidate_refs);
+        let result = select_best_guess(&guesses, &candidates);
         assert!(result.is_some());
 
         let (best, max_remaining) = result.unwrap();
@@ -83,10 +79,7 @@ mod tests {
         let guesses = [Word::new("crane").unwrap()];
         let candidates = [Word::new("slate").unwrap()];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let result = select_best_guess(&guess_refs, &candidate_refs);
+        let result = select_best_guess(&guesses, &candidates);
         assert!(result.is_some());
 
         let (best, _) = result.unwrap();
@@ -99,11 +92,8 @@ mod tests {
         let guesses = [Word::new("aaaaa").unwrap(), Word::new("bbbbb").unwrap()];
         let candidates = [Word::new("ccccc").unwrap()];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let result1 = select_best_guess(&guess_refs, &candidate_refs);
-        let result2 = select_best_guess(&guess_refs, &candidate_refs);
+        let result1 = select_best_guess(&guesses, &candidates);
+        let result2 = select_best_guess(&guesses, &candidates);
 
         assert!(result1.is_some());
         assert!(result2.is_some());
@@ -118,11 +108,10 @@ mod tests {
 
     #[test]
     fn returns_none_on_empty_guess_pool() {
-        let guesses: Vec<&Word> = vec![];
+        let guesses: Vec<Word> = vec![];
         let candidates = [Word::new("slate").unwrap()];
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
 
-        let result = select_best_guess(&guesses, &candidate_refs);
+        let result = select_best_guess(&guesses, &candidates);
         assert!(result.is_none());
     }
 
@@ -136,10 +125,7 @@ mod tests {
             Word::new("zzzzz").unwrap(), // Not a candidate
         ];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let result = select_best_guess(&guess_refs, &candidate_refs);
+        let result = select_best_guess(&guesses, &candidates);
         assert!(result.is_some());
 
         let (best, _) = result.unwrap();

@@ -111,36 +111,25 @@ impl Strategy for AdaptiveStrategy {
     fn select_guess<'a>(&self, guess_pool: &'a [Word], candidates: &[Word]) -> Option<&'a Word> {
         let tier = self.get_tier(candidates.len());
 
-        // Create reference vectors once
-        let guess_refs: Vec<&Word> = guess_pool.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        // Helper to find word in guess_pool by text comparison
-        let find_in_pool = |word: &Word| guess_pool.iter().find(|w| w.text() == word.text());
-
         match tier {
             AdaptiveTier::PureEntropy => {
                 // 101+ candidates: Pure entropy maximization
-                let (best, _) = super::entropy::select_best_guess(&guess_refs, &candidate_refs)?;
-                find_in_pool(best)
+                super::entropy::select_best_guess(guess_pool, candidates).map(|(best, _)| best)
             }
 
             AdaptiveTier::EntropyMinimax => {
                 // 22-100 candidates: Entropy + minimax tiebreakers
-                selection::select_with_expected_tiebreaker(&guess_refs, &candidate_refs)
-                    .and_then(find_in_pool)
+                selection::select_with_expected_tiebreaker(guess_pool, candidates)
             }
 
             AdaptiveTier::Hybrid => {
                 // 10-21 candidates: Hybrid scoring
-                selection::select_with_hybrid_scoring(&guess_refs, &candidate_refs)
-                    .and_then(find_in_pool)
+                selection::select_with_hybrid_scoring(guess_pool, candidates)
             }
 
             AdaptiveTier::MinimaxFirst => {
                 // 3-9 candidates: Minimax-first with 0.1 epsilon
-                selection::select_minimax_first(&guess_refs, &candidate_refs, 0.1)
-                    .and_then(find_in_pool)
+                selection::select_minimax_first(guess_pool, candidates, 0.1)
             }
 
             AdaptiveTier::Random => {

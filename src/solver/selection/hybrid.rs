@@ -14,14 +14,16 @@ use rayon::prelude::*;
 /// Returns `None` if the guess pool is empty.
 #[must_use]
 pub fn select_with_expected_tiebreaker<'a>(
-    guess_pool: &'a [&'a Word],
-    candidates: &[&Word],
+    guess_pool: &'a [Word],
+    candidates: &[Word],
 ) -> Option<&'a Word> {
+    let candidate_refs: Vec<&Word> = candidates.iter().collect();
+
     // Compute all metrics (parallelized)
     let metrics: Vec<_> = guess_pool
         .par_iter()
-        .map(|&guess| {
-            let m = calculate_metrics(guess, candidates);
+        .map(|guess| {
+            let m = calculate_metrics(guess, &candidate_refs);
             (guess, m)
         })
         .collect();
@@ -46,14 +48,16 @@ pub fn select_with_expected_tiebreaker<'a>(
 /// Returns `None` if the guess pool is empty.
 #[must_use]
 pub fn select_with_hybrid_scoring<'a>(
-    guess_pool: &'a [&'a Word],
-    candidates: &[&Word],
+    guess_pool: &'a [Word],
+    candidates: &[Word],
 ) -> Option<&'a Word> {
+    let candidate_refs: Vec<&Word> = candidates.iter().collect();
+
     // Compute all metrics (parallelized)
     let metrics: Vec<_> = guess_pool
         .par_iter()
-        .map(|&guess| {
-            let m = calculate_metrics(guess, candidates);
+        .map(|guess| {
+            let m = calculate_metrics(guess, &candidate_refs);
             (guess, m)
         })
         .collect();
@@ -93,10 +97,7 @@ mod tests {
             Word::new("plate").unwrap(),
         ];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let result = select_with_expected_tiebreaker(&guess_refs, &candidate_refs);
+        let result = select_with_expected_tiebreaker(&guesses, &candidates);
         assert!(result.is_some());
 
         let best = result.unwrap();
@@ -118,10 +119,7 @@ mod tests {
             Word::new("grate").unwrap(),
         ];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let result = select_with_hybrid_scoring(&guess_refs, &candidate_refs);
+        let result = select_with_hybrid_scoring(&guesses, &candidates);
         assert!(result.is_some());
 
         let best = result.unwrap();
@@ -139,10 +137,7 @@ mod tests {
         ];
         let candidates = [Word::new("irate").unwrap(), Word::new("crate").unwrap()];
 
-        let guess_refs: Vec<&Word> = guesses.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let result = select_with_hybrid_scoring(&guess_refs, &candidate_refs);
+        let result = select_with_hybrid_scoring(&guesses, &candidates);
         assert!(result.is_some());
 
         let best = result.unwrap();
@@ -153,21 +148,19 @@ mod tests {
 
     #[test]
     fn expected_tiebreaker_returns_none_on_empty() {
-        let guesses: Vec<&Word> = vec![];
+        let guesses: Vec<Word> = vec![];
         let candidates = [Word::new("slate").unwrap()];
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
 
-        let result = select_with_expected_tiebreaker(&guesses, &candidate_refs);
+        let result = select_with_expected_tiebreaker(&guesses, &candidates);
         assert!(result.is_none());
     }
 
     #[test]
     fn hybrid_scoring_returns_none_on_empty() {
-        let guesses: Vec<&Word> = vec![];
+        let guesses: Vec<Word> = vec![];
         let candidates = [Word::new("slate").unwrap()];
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
 
-        let result = select_with_hybrid_scoring(&guesses, &candidate_refs);
+        let result = select_with_hybrid_scoring(&guesses, &candidates);
         assert!(result.is_none());
     }
 }

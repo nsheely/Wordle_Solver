@@ -95,4 +95,69 @@ mod tests {
         let words = words_from_slice(ANSWERS);
         assert_eq!(words.len(), ANSWERS.len());
     }
+
+    #[test]
+    fn load_from_file_basic() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        // Create temporary file with test words
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "crane").unwrap();
+        writeln!(temp_file, "slate").unwrap();
+        writeln!(temp_file, "irate").unwrap();
+        temp_file.flush().unwrap();
+
+        let words = load_from_file(temp_file.path()).unwrap();
+        assert_eq!(words.len(), 3);
+        assert_eq!(words[0].text(), "crane");
+        assert_eq!(words[1].text(), "slate");
+        assert_eq!(words[2].text(), "irate");
+    }
+
+    #[test]
+    fn load_from_file_skips_invalid() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        // Create file with mix of valid and invalid words
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "crane").unwrap();
+        writeln!(temp_file, "toolongword").unwrap(); // Too long
+        writeln!(temp_file, "abc").unwrap(); // Too short
+        writeln!(temp_file, "slate").unwrap();
+        writeln!(temp_file, "").unwrap(); // Empty line
+        writeln!(temp_file, "   ").unwrap(); // Whitespace only
+        writeln!(temp_file, "irate").unwrap();
+        temp_file.flush().unwrap();
+
+        let words = load_from_file(temp_file.path()).unwrap();
+        assert_eq!(words.len(), 3);
+        assert_eq!(words[0].text(), "crane");
+        assert_eq!(words[1].text(), "slate");
+        assert_eq!(words[2].text(), "irate");
+    }
+
+    #[test]
+    fn load_from_file_custom_word() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        // Test loading a custom word like "hoove"
+        let mut temp_file = NamedTempFile::new().unwrap();
+        writeln!(temp_file, "crane").unwrap();
+        writeln!(temp_file, "hoove").unwrap(); // Custom made-up word
+        writeln!(temp_file, "slate").unwrap();
+        temp_file.flush().unwrap();
+
+        let words = load_from_file(temp_file.path()).unwrap();
+        assert_eq!(words.len(), 3);
+        assert!(words.iter().any(|w| w.text() == "hoove"));
+    }
+
+    #[test]
+    fn load_from_file_nonexistent_fails() {
+        let result = load_from_file("/path/that/does/not/exist.txt");
+        assert!(result.is_err());
+    }
 }

@@ -65,11 +65,7 @@ pub struct EntropyStrategy;
 
 impl Strategy for EntropyStrategy {
     fn select_guess<'a>(&self, guess_pool: &'a [Word], candidates: &[Word]) -> Option<&'a Word> {
-        let guess_refs: Vec<&Word> = guess_pool.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        super::entropy::select_best_guess(&guess_refs, &candidate_refs)
-            .and_then(|(best, _)| guess_pool.iter().find(|w| w.text() == best.text()))
+        super::entropy::select_best_guess(guess_pool, candidates).map(|(best, _)| best)
     }
 }
 
@@ -80,11 +76,7 @@ pub struct MinimaxStrategy;
 
 impl Strategy for MinimaxStrategy {
     fn select_guess<'a>(&self, guess_pool: &'a [Word], candidates: &[Word]) -> Option<&'a Word> {
-        let guess_refs: Vec<&Word> = guess_pool.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        super::minimax::select_best_guess(&guess_refs, &candidate_refs)
-            .and_then(|(best, _)| guess_pool.iter().find(|w| w.text() == best.text()))
+        super::minimax::select_best_guess(guess_pool, candidates).map(|(best, _)| best)
     }
 }
 
@@ -115,16 +107,11 @@ impl Default for HybridStrategy {
 
 impl Strategy for HybridStrategy {
     fn select_guess<'a>(&self, guess_pool: &'a [Word], candidates: &[Word]) -> Option<&'a Word> {
-        let guess_refs: Vec<&Word> = guess_pool.iter().collect();
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let best = if candidates.len() <= self.minimax_threshold {
-            super::minimax::select_best_guess(&guess_refs, &candidate_refs)?.0
+        if candidates.len() <= self.minimax_threshold {
+            super::minimax::select_best_guess(guess_pool, candidates).map(|(best, _)| best)
         } else {
-            super::entropy::select_best_guess(&guess_refs, &candidate_refs)?.0
-        };
-
-        guess_pool.iter().find(|w| w.text() == best.text())
+            super::entropy::select_best_guess(guess_pool, candidates).map(|(best, _)| best)
+        }
     }
 }
 
