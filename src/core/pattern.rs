@@ -68,49 +68,40 @@ impl Pattern {
     /// // 0 + 1×3 + 2×9 + 0×27 + 2×81 = 180
     /// assert_eq!(pattern.value(), 180);
     /// ```
+    #[inline]
     #[must_use]
     pub fn calculate(guess: &Word, answer: &Word) -> Self {
         let mut result = [0u8; 5];
         let mut answer_available = answer.char_counts();
 
         // First pass: Mark greens (exact position matches)
-        // Allow: Index needed to access guess[i], answer[i], and set result[i]
-        #[allow(clippy::needless_range_loop)]
+        #[allow(clippy::needless_range_loop)] // Need index for positional matching
         for i in 0..5 {
             if guess.chars()[i] == answer.chars()[i] {
                 result[i] = 2; // Green
 
-                // Remove from available pool
+                // Remove from available pool for yellow detection
                 let letter = guess.chars()[i];
-                if let Some(count) = answer_available.get_mut(&letter) {
-                    *count = count.saturating_sub(1);
-                }
+                let idx = (letter - b'a') as usize;
+                answer_available[idx] = answer_available[idx].saturating_sub(1);
             }
         }
 
-        // Second pass: Mark yellows (wrong position, but letter exists)
-        // Allow: Index needed to access guess[i] and check/set result[i]
-        #[allow(clippy::needless_range_loop)]
+        // Second pass: Mark yellows (letter exists but wrong position)
+        #[allow(clippy::needless_range_loop)] // Need index to update result array
         for i in 0..5 {
             if result[i] == 0 {
-                // Not already green
                 let letter = guess.chars()[i];
-                if let Some(count) = answer_available.get_mut(&letter)
-                    && *count > 0
-                {
+                let idx = (letter - b'a') as usize;
+                if answer_available[idx] > 0 {
                     result[i] = 1; // Yellow
-                    *count -= 1;
+                    answer_available[idx] -= 1;
                 }
             }
         }
 
-        // Encode as base-3 number
-        let mut pattern = 0u8;
-        let mut multiplier = 1u8;
-        for &digit in &result {
-            pattern += digit * multiplier;
-            multiplier *= 3;
-        }
+        // Encode as base-3 number: digit[0] + digit[1]*3 + digit[2]*9 + digit[3]*27 + digit[4]*81
+        let pattern = result[0] + result[1] * 3 + result[2] * 9 + result[3] * 27 + result[4] * 81;
 
         Self(pattern)
     }

@@ -4,7 +4,6 @@
 //! for any possible pattern.
 
 use crate::core::{Pattern, Word};
-use rustc_hash::FxHashMap;
 
 /// Calculate the maximum remaining candidates for a guess
 ///
@@ -40,16 +39,19 @@ pub fn calculate_max_remaining(guess: &Word, candidates: &[&Word]) -> usize {
     let pattern_counts = group_by_pattern(guess, candidates);
 
     // Return the maximum count (worst case)
-    pattern_counts.values().max().copied().unwrap_or(0)
+    pattern_counts.iter().max().copied().unwrap_or(0)
 }
 
 /// Group candidates by the pattern they produce with the guess
-fn group_by_pattern(guess: &Word, candidates: &[&Word]) -> FxHashMap<Pattern, usize> {
-    let mut counts = FxHashMap::default();
+///
+/// Returns an array where each index is a pattern value (0-242)
+/// and the value is the count of candidates producing that pattern.
+fn group_by_pattern(guess: &Word, candidates: &[&Word]) -> [usize; 243] {
+    let mut counts = [0usize; 243];
 
     for &candidate in candidates {
         let pattern = Pattern::calculate(guess, candidate);
-        *counts.entry(pattern).or_insert(0) += 1;
+        counts[pattern.value() as usize] += 1;
     }
 
     counts
@@ -150,9 +152,10 @@ mod tests {
 
         let groups = group_by_pattern(&guess, &candidate_refs);
 
-        // Should have at least 1 pattern, at most 2
-        assert!(!groups.is_empty() && groups.len() <= 2);
-        assert_eq!(groups.values().sum::<usize>(), 2);
+        // Should have 2 different patterns with 1 candidate each
+        let non_zero_count = groups.iter().filter(|&&c| c > 0).count();
+        assert!(non_zero_count >= 1 && non_zero_count <= 2);
+        assert_eq!(groups.iter().sum::<usize>(), 2);
     }
 
     #[test]

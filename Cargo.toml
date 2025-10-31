@@ -33,7 +33,6 @@ crossterm = "0.29"
 
 # Performance
 rayon = "1.11"
-rustc-hash = "2.1"
 
 # Utilities
 colored = "3.0"

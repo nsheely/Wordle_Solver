@@ -1,18 +1,16 @@
 //! Wordle word representation
 //!
-//! A Word stores a 5-letter word along with letter position indices for pattern calculation.
+//! A Word stores a 5-letter word for efficient pattern calculation.
 
-use rustc_hash::FxHashMap;
 use std::fmt;
 
-/// A 5-letter Wordle word with letter position tracking
+/// A 5-letter Wordle word
 ///
-/// Stores the word as bytes and maintains a map of letter positions for duplicate handling.
+/// Stores the word as both a String and a byte array for efficient access.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Word {
     text: String,
     chars: [u8; 5],
-    char_positions: FxHashMap<u8, Vec<usize>>,
 }
 
 /// Error type for invalid words
@@ -40,6 +38,8 @@ impl std::error::Error for WordError {}
 impl Word {
     /// Create a new Word from a string
     ///
+    /// Converts the input to lowercase and validates it meets Wordle requirements.
+    ///
     /// # Errors
     /// Returns `WordError` if:
     /// - Length is not exactly 5
@@ -58,7 +58,7 @@ impl Word {
     /// ```
     ///
     /// # Panics
-    /// Will not panic - the `expect()` call is guaranteed safe by length validation.
+    /// Never panics. The `expect` call is guaranteed safe by prior length validation.
     pub fn new(text: impl Into<String>) -> Result<Self, WordError> {
         let text: String = text.into().to_lowercase();
 
@@ -82,17 +82,7 @@ impl Word {
             .try_into()
             .expect("length already validated");
 
-        // Build position map for fast lookup
-        let mut char_positions: FxHashMap<u8, Vec<usize>> = FxHashMap::default();
-        for (i, &ch) in chars.iter().enumerate() {
-            char_positions.entry(ch).or_default().push(i);
-        }
-
-        Ok(Self {
-            text,
-            chars,
-            char_positions,
-        })
+        Ok(Self { text, chars })
     }
 
     /// Get the word as a string slice
@@ -123,27 +113,30 @@ impl Word {
     #[inline]
     #[must_use]
     pub fn has_letter(&self, letter: u8) -> bool {
-        self.char_positions.contains_key(&letter)
+        self.chars.contains(&letter)
     }
 
     /// Get all positions where a letter appears
     ///
-    /// Returns an empty slice if the letter doesn't appear.
-    #[inline]
-    pub fn positions_of(&self, letter: u8) -> &[usize] {
-        self.char_positions
-            .get(&letter)
-            .map_or(&[], std::vec::Vec::as_slice)
+    /// Returns a Vec of positions. Empty if the letter doesn't appear.
+    #[must_use]
+    pub fn positions_of(&self, letter: u8) -> Vec<usize> {
+        self.chars
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &ch)| if ch == letter { Some(i) } else { None })
+            .collect()
     }
 
     /// Get the count of each letter in the word
     ///
-    /// Used for pattern calculation with duplicate letters.
+    /// Returns array where index represents the letter (a=0, b=1, ..., z=25)
+    /// and the value is the count of that letter in the word.
     #[inline]
-    pub(crate) fn char_counts(&self) -> FxHashMap<u8, u8> {
-        let mut counts = FxHashMap::default();
+    pub(crate) fn char_counts(&self) -> [u8; 26] {
+        let mut counts = [0u8; 26];
         for &ch in &self.chars {
-            *counts.entry(ch).or_insert(0) += 1;
+            counts[(ch - b'a') as usize] += 1;
         }
         counts
     }
@@ -243,26 +236,28 @@ mod tests {
     fn word_char_counts() {
         let word = Word::new("speed").unwrap();
         let counts = word.char_counts();
-        assert_eq!(counts.get(&b's'), Some(&1));
-        assert_eq!(counts.get(&b'p'), Some(&1));
-        assert_eq!(counts.get(&b'e'), Some(&2));
-        assert_eq!(counts.get(&b'd'), Some(&1));
+        assert_eq!(counts[(b's' - b'a') as usize], 1);
+        assert_eq!(counts[(b'p' - b'a') as usize], 1);
+        assert_eq!(counts[(b'e' - b'a') as usize], 2);
+        assert_eq!(counts[(b'd' - b'a') as usize], 1);
     }
 
     #[test]
     fn word_char_counts_all_unique() {
         let word = Word::new("crane").unwrap();
         let counts = word.char_counts();
-        assert_eq!(counts.len(), 5);
-        assert!(counts.values().all(|&count| count == 1));
+        let non_zero = counts.iter().filter(|&&c| c > 0).count();
+        assert_eq!(non_zero, 5);
+        assert!(counts.iter().filter(|&&c| c > 0).all(|&count| count == 1));
     }
 
     #[test]
     fn word_char_counts_all_same() {
         let word = Word::new("aaaaa").unwrap();
         let counts = word.char_counts();
-        assert_eq!(counts.len(), 1);
-        assert_eq!(counts.get(&b'a'), Some(&5));
+        let non_zero = counts.iter().filter(|&&c| c > 0).count();
+        assert_eq!(non_zero, 1);
+        assert_eq!(counts[(b'a' - b'a') as usize], 5);
     }
 
     #[test]

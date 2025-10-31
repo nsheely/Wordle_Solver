@@ -1,7 +1,9 @@
 //! Entropy calculation for Wordle patterns
+//!
+//! Calculates Shannon entropy to measure the information gain from a guess.
+//! Higher entropy means the guess better splits the remaining candidates.
 
 use crate::core::{Pattern, Word};
-use rustc_hash::FxHashMap;
 
 /// Metrics for evaluating a guess
 #[derive(Debug, Clone, Copy)]
@@ -47,17 +49,37 @@ pub fn calculate_entropy(guess: &Word, candidates: &[&Word]) -> f64 {
     // Group candidates by pattern
     let pattern_counts = group_by_pattern(guess, candidates);
 
-    // Calculate Shannon entropy
-    shannon_entropy(&pattern_counts)
+    // Calculate Shannon entropy from array
+    shannon_entropy_array(&pattern_counts, candidates.len())
+}
+
+/// Calculate Shannon entropy from array of pattern counts
+///
+/// Internal optimized version that works with fixed-size arrays.
+#[inline]
+fn shannon_entropy_array(pattern_counts: &[usize; 243], total: usize) -> f64 {
+    if total == 0 {
+        return 0.0;
+    }
+
+    let total_f = total as f64;
+    pattern_counts
+        .iter()
+        .filter(|&&count| count > 0)
+        .map(|&count| {
+            let p = count as f64 / total_f;
+            -p * p.log2()
+        })
+        .sum()
 }
 
 /// Group candidates by the pattern they produce with the guess
-fn group_by_pattern(guess: &Word, candidates: &[&Word]) -> FxHashMap<Pattern, usize> {
-    let mut counts = FxHashMap::default();
+fn group_by_pattern(guess: &Word, candidates: &[&Word]) -> [usize; 243] {
+    let mut counts = [0usize; 243]; // Array for all 243 possible patterns
 
     for &candidate in candidates {
         let pattern = Pattern::calculate(guess, candidate);
-        *counts.entry(pattern).or_insert(0) += 1;
+        counts[pattern.value() as usize] += 1;
     }
 
     counts
@@ -70,10 +92,10 @@ fn group_by_pattern(guess: &Word, candidates: &[&Word]) -> FxHashMap<Pattern, us
 /// # Examples
 /// ```
 /// use wordle_solver::solver::entropy::shannon_entropy;
-/// use rustc_hash::FxHashMap;
+/// use std::collections::HashMap;
 /// use wordle_solver::core::Pattern;
 ///
-/// let mut uniform = FxHashMap::default();
+/// let mut uniform = HashMap::new();
 /// uniform.insert(Pattern::new(0), 25);
 /// uniform.insert(Pattern::new(1), 25);
 /// uniform.insert(Pattern::new(2), 25);
@@ -107,6 +129,7 @@ where
 ///
 /// Returns entropy, expected remaining candidates, and max partition size.
 /// This enables sophisticated tiebreaking strategies.
+#[must_use]
 pub fn calculate_metrics(guess: &Word, candidates: &[&Word]) -> GuessMetrics {
     if candidates.is_empty() {
         return GuessMetrics {
@@ -116,40 +139,23 @@ pub fn calculate_metrics(guess: &Word, candidates: &[&Word]) -> GuessMetrics {
         };
     }
 
-    let mut pattern_groups: FxHashMap<Pattern, Vec<&Word>> = FxHashMap::default();
-
-    // Group candidates by pattern
-    for &candidate in candidates {
-        let pattern = Pattern::calculate(guess, candidate);
-        pattern_groups.entry(pattern).or_default().push(candidate);
-    }
+    // Count how many candidates produce each pattern
+    let pattern_counts = group_by_pattern(guess, candidates);
 
     let total = candidates.len() as f64;
+    let mut entropy = 0.0;
+    let mut expected_remaining = 0.0;
+    let mut max_partition = 0;
 
-    // Calculate entropy
-    let entropy: f64 = pattern_groups
-        .values()
-        .map(|group| {
-            let p = group.len() as f64 / total;
-            -p * p.log2()
-        })
-        .sum();
-
-    // Calculate expected remaining candidates
-    let expected_remaining: f64 = pattern_groups
-        .values()
-        .map(|group| {
-            let p = group.len() as f64 / total;
-            p * group.len() as f64
-        })
-        .sum();
-
-    // Find max partition size (minimax worst-case)
-    let max_partition = pattern_groups
-        .values()
-        .map(std::vec::Vec::len)
-        .max()
-        .unwrap_or(0);
+    // Single pass through pattern counts to calculate all metrics
+    for &count in &pattern_counts {
+        if count > 0 {
+            let p = count as f64 / total;
+            entropy += -p * p.log2();
+            expected_remaining += p * count as f64;
+            max_partition = max_partition.max(count);
+        }
+    }
 
     GuessMetrics {
         entropy,
@@ -161,11 +167,12 @@ pub fn calculate_metrics(guess: &Word, candidates: &[&Word]) -> GuessMetrics {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     #[test]
     fn shannon_entropy_uniform_distribution() {
         // 4 patterns, each appears once = log2(4) = 2 bits
-        let mut counts = FxHashMap::default();
+        let mut counts = HashMap::new();
         counts.insert(Pattern::new(0), 1);
         counts.insert(Pattern::new(1), 1);
         counts.insert(Pattern::new(2), 1);
@@ -178,7 +185,7 @@ mod tests {
     #[test]
     fn shannon_entropy_certain_outcome() {
         // Only one pattern = 0 bits (no uncertainty)
-        let mut counts = FxHashMap::default();
+        let mut counts = HashMap::new();
         counts.insert(Pattern::new(0), 10);
 
         let entropy = shannon_entropy(&counts);
@@ -188,13 +195,13 @@ mod tests {
     #[test]
     fn shannon_entropy_skewed_distribution() {
         // Skewed distribution has less entropy than uniform
-        let mut uniform = FxHashMap::default();
+        let mut uniform = HashMap::new();
         uniform.insert(Pattern::new(0), 25);
         uniform.insert(Pattern::new(1), 25);
         uniform.insert(Pattern::new(2), 25);
         uniform.insert(Pattern::new(3), 25);
 
-        let mut skewed = FxHashMap::default();
+        let mut skewed = HashMap::new();
         skewed.insert(Pattern::new(0), 97);
         skewed.insert(Pattern::new(1), 1);
         skewed.insert(Pattern::new(2), 1);
@@ -206,7 +213,7 @@ mod tests {
     #[test]
     fn shannon_entropy_bounds() {
         // Entropy is always non-negative and bounded by log2(n)
-        let mut counts = FxHashMap::default();
+        let mut counts = HashMap::new();
         counts.insert(Pattern::new(0), 10);
         counts.insert(Pattern::new(1), 20);
         counts.insert(Pattern::new(2), 30);
@@ -218,7 +225,7 @@ mod tests {
 
     #[test]
     fn shannon_entropy_empty() {
-        let counts: FxHashMap<Pattern, usize> = FxHashMap::default();
+        let counts: HashMap<Pattern, usize> = HashMap::new();
         let entropy = shannon_entropy(&counts);
         assert!((entropy - 0.0).abs() < f64::EPSILON);
     }
@@ -293,8 +300,9 @@ mod tests {
 
         let groups = group_by_pattern(&guess, &candidate_refs);
 
-        // Should have 2 different patterns
-        assert_eq!(groups.len(), 2);
-        assert_eq!(groups.values().sum::<usize>(), 2);
+        // Should have 2 different patterns with 1 candidate each
+        let non_zero_count = groups.iter().filter(|&&c| c > 0).count();
+        assert_eq!(non_zero_count, 2);
+        assert_eq!(groups.iter().sum::<usize>(), 2);
     }
 }
