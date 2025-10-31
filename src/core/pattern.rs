@@ -81,9 +81,8 @@ impl Pattern {
                 result[i] = 2; // Green
 
                 // Remove from available pool for yellow detection
-                let letter = guess.chars()[i];
-                let idx = (letter - b'a') as usize;
-                answer_available[idx] = answer_available[idx].saturating_sub(1);
+                let idx = (guess.chars()[i] - b'a') as usize;
+                answer_available[idx] -= 1; // Safe: letter must exist in answer
             }
         }
 
@@ -91,8 +90,7 @@ impl Pattern {
         #[allow(clippy::needless_range_loop)] // Need index to update result array
         for i in 0..5 {
             if result[i] == 0 {
-                let letter = guess.chars()[i];
-                let idx = (letter - b'a') as usize;
+                let idx = (guess.chars()[i] - b'a') as usize;
                 if answer_available[idx] > 0 {
                     result[i] = 1; // Yellow
                     answer_available[idx] -= 1;

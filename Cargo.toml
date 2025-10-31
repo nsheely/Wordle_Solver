@@ -47,6 +47,7 @@ lto = true
 codegen-units = 1
 opt-level = 3
 strip = true
+panic = "abort"
 
 [profile.dev]
 opt-level = 2
