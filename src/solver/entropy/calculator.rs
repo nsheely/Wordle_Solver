@@ -233,7 +233,7 @@ mod tests {
     #[test]
     fn calculate_entropy_real_words() {
         let guess = Word::new("crane").unwrap();
-        let candidates = vec![
+        let candidates = [
             Word::new("slate").unwrap(),
             Word::new("irate").unwrap(),
             Word::new("trace").unwrap(),

@@ -94,7 +94,7 @@ mod tests {
     fn max_remaining_skewed_distribution() {
         // Skewed distribution - worst case is the largest group
         let guess = Word::new("crane").unwrap();
-        let candidates = vec![
+        let candidates = [
             Word::new("slate").unwrap(), // Pattern A
             Word::new("irate").unwrap(), // Pattern B
             Word::new("crate").unwrap(), // Pattern C
@@ -154,7 +154,7 @@ mod tests {
 
         // Should have 2 different patterns with 1 candidate each
         let non_zero_count = groups.iter().filter(|&&c| c > 0).count();
-        assert!(non_zero_count >= 1 && non_zero_count <= 2);
+        assert!((1..=2).contains(&non_zero_count));
         assert_eq!(groups.iter().sum::<usize>(), 2);
     }
 
