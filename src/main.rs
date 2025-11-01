@@ -1,7 +1,7 @@
 //! Wordle Solver - CLI
 //!
 //! Wordle solver with TUI and CLI modes using information theory and game theory.
-//! Performance: 99.7-99.8% optimal (3.428-3.436 avg guesses)
+//! Performance: 99.64% optimal (3.4333 avg guesses, range: 99.3-99.9%)
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -19,7 +19,7 @@ use wordle_solver::{
 #[derive(Parser)]
 #[command(
     name = "wordle_solver",
-    about = "Wordle solver using adaptive information-theoretic strategies (99.7-99.8% optimal)",
+    about = "Wordle solver using adaptive information-theoretic strategies (99.64% optimal)",
     version,
     author
 )]

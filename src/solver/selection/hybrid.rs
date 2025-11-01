@@ -42,14 +42,16 @@ pub fn select_with_expected_tiebreaker<'a>(
 
 /// Select best guess with hybrid scoring
 ///
-/// For medium candidate counts (9-20), use formula: score = (entropy × 100) - (`max_partition` × 10)
-/// This balances average-case (entropy) with worst-case (minimax) at ~5:1 ratio.
+/// For medium candidate counts (9-20), use formula: score = (entropy × `entropy_weight`) - (`max_partition` × `minimax_penalty`)
+/// The default weights (100.0, 10.0) balance average-case (entropy) with worst-case (minimax) at 10:1 ratio.
 ///
 /// Returns `None` if the guess pool is empty.
 #[must_use]
 pub fn select_with_hybrid_scoring<'a>(
     guess_pool: &'a [Word],
     candidates: &[Word],
+    entropy_weight: f64,
+    minimax_penalty: f64,
 ) -> Option<&'a Word> {
     let candidate_refs: Vec<&Word> = candidates.iter().collect();
 
@@ -66,11 +68,13 @@ pub fn select_with_hybrid_scoring<'a>(
     metrics
         .into_iter()
         .max_by(|(_, m1), (_, m2)| {
-            // Hybrid score: entropy (×100) minus worst-case penalty (×10)
-            let score1 = (m1.entropy * 100.0) as i32
-                - i32::try_from(m1.max_partition * 10).unwrap_or(i32::MAX);
-            let score2 = (m2.entropy * 100.0) as i32
-                - i32::try_from(m2.max_partition * 10).unwrap_or(i32::MAX);
+            // Hybrid score: entropy (weighted) minus worst-case penalty (weighted)
+            let score1 = (m1.entropy * entropy_weight) as i32
+                - i32::try_from((m1.max_partition as f64 * minimax_penalty) as usize)
+                    .unwrap_or(i32::MAX);
+            let score2 = (m2.entropy * entropy_weight) as i32
+                - i32::try_from((m2.max_partition as f64 * minimax_penalty) as usize)
+                    .unwrap_or(i32::MAX);
             // Higher score is better
             score1
                 .cmp(&score2)
@@ -119,7 +123,7 @@ mod tests {
             Word::new("grate").unwrap(),
         ];
 
-        let result = select_with_hybrid_scoring(&guesses, &candidates);
+        let result = select_with_hybrid_scoring(&guesses, &candidates, 100.0, 10.0);
         assert!(result.is_some());
 
         let best = result.unwrap();
@@ -137,7 +141,7 @@ mod tests {
         ];
         let candidates = [Word::new("irate").unwrap(), Word::new("crate").unwrap()];
 
-        let result = select_with_hybrid_scoring(&guesses, &candidates);
+        let result = select_with_hybrid_scoring(&guesses, &candidates, 100.0, 10.0);
         assert!(result.is_some());
 
         let best = result.unwrap();
@@ -160,7 +164,7 @@ mod tests {
         let guesses: Vec<Word> = vec![];
         let candidates = [Word::new("slate").unwrap()];
 
-        let result = select_with_hybrid_scoring(&guesses, &candidates);
+        let result = select_with_hybrid_scoring(&guesses, &candidates, 100.0, 10.0);
         assert!(result.is_none());
     }
 }

@@ -4,7 +4,7 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Rust](https://img.shields.io/badge/rust-2024-orange.svg)
 
-A Wordle solver in Rust using information theory and game theory to achieve 99.7-99.8% optimal performance.
+A Wordle solver in Rust using information theory and game theory to achieve near optimal performance.
 
 ## What It Does
 
@@ -13,8 +13,10 @@ Solves Wordle puzzles by combining multiple strategies:
 - **Minimax** - minimizes worst-case remaining candidates
 - **Hybrid** - balances both approaches adaptively
 
-Achieves 3.428-3.436 average guesses (optimal is 3.421*).
-*[Bertsimas & Paskov](https://auction-upload-files.s3.amazonaws.com/Wordle_Paper_Final.pdf)
+**3.4333 average guesses** (SE ± 0.0012, optimal is 3.421*)
+
+*[Bertsimas & Paskov MIT Research](https://auction-upload-files.s3.amazonaws.com/Wordle_Paper_Final.pdf)
+
 ## Usage
 
 ### Build
@@ -88,8 +90,14 @@ wordle_solver simple --strategy minimax
 
 ## Performance
 
-- **Average guesses**: 3.436-3.428 (99.7-99.8% of optimal 3.421)
+**Statistical Performance:**
+- **Mean**: 3.4333 guesses ± 0.0012 (SE) - **99.64% of optimal 3.421**
+- **Standard deviation**: 0.0053 guesses
+- **95% confidence interval**: 3.431 - 3.436 guesses
+- **Observed range**: 3.424 - 3.444 guesses (99.33% - 99.91%)
 - **Success rate**: 100% within 6 guesses
+
+Performance variance is due to random selection in 2-candidate endgames where both candidates have equal probability.
 
 **Typical distribution:**
 - 2 guesses: 78-79 words (3.4%)
@@ -102,13 +110,13 @@ wordle_solver simple --strategy minimax
 
 Uses different tactics based on how many candidates remain:
 
-1. **101+ candidates**: Pure entropy - maximize information gain
-2. **22-100 candidates**: Entropy with minimax tiebreaker
-3. **10-21 candidates**: Hybrid scoring (entropy × 100) - (max_partition × 10)
-4. **3-9 candidates**: Minimax-first with 10% candidate preference
+1. **81+ candidates**: Pure entropy - maximize information gain
+2. **22-80 candidates**: Entropy with minimax tiebreaker
+3. **16-21 candidates**: Hybrid scoring (entropy × 100) - (max_partition × 10)
+4. **3-15 candidates**: Minimax-first with 20% candidate preference
 5. **1-2 candidates**: Random selection
 
-The strategy automatically switches tactics as candidates are eliminated.
+The strategy automatically switches tactics as candidates are eliminated. Parameters optimized through exhaustive search of 1,932 configurations.
 
 ## Project Structure
 

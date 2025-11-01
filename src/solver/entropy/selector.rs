@@ -44,7 +44,16 @@ pub fn select_best_guess<'a>(
             let entropy = calculate_entropy(guess, &candidate_refs);
             (guess, entropy)
         })
-        .max_by(|(_, e1), (_, e2)| e1.total_cmp(e2))
+        .max_by(|(w1, e1), (w2, e2)| {
+            // Primary: compare by entropy
+            match e1.total_cmp(e2) {
+                std::cmp::Ordering::Equal => {
+                    // Tie-breaker: lexicographic order for determinism
+                    w1.text().cmp(w2.text())
+                }
+                other => other,
+            }
+        })
 }
 
 #[cfg(test)]

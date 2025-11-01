@@ -44,7 +44,16 @@ pub fn select_best_guess<'a>(
             let max_remaining = calculate_max_remaining(guess, &candidate_refs);
             (guess, max_remaining)
         })
-        .min_by_key(|(_, max)| *max)
+        .min_by(|(w1, m1), (w2, m2)| {
+            // Primary: compare by max_remaining (lower is better)
+            match m1.cmp(m2) {
+                std::cmp::Ordering::Equal => {
+                    // Tie-breaker: lexicographic order for determinism
+                    w1.text().cmp(w2.text())
+                }
+                other => other,
+            }
+        })
 }
 
 #[cfg(test)]
