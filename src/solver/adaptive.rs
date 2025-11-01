@@ -8,9 +8,9 @@ use rand::prelude::IndexedRandom;
 
 /// Adaptive strategy with configurable tier thresholds
 ///
-/// Achieves 99.64% optimal performance (3.4333 avg guesses, SE ±0.0012) by using
-/// different tactics depending on how many candidates remain. Parameters tuned via
-/// exhaustive search across 1,932 configurations (optimal: hybrid=15, epsilon=0.2).
+/// Achieves 99.64% optimal performance (3.4333 avg guesses) by using different
+/// tactics depending on how many candidates remain. Thresholds tuned via exhaustive
+/// search (hybrid=15, epsilon=0.2).
 ///
 /// ## How Thresholds Work
 ///
@@ -95,14 +95,13 @@ impl AdaptiveStrategy {
 
 impl Default for AdaptiveStrategy {
     /// Default thresholds tuned for 99.64% optimal performance (3.4333 avg guesses)
-    /// via exhaustive search across 1,932 configurations
     fn default() -> Self {
         Self::new(
             80,    // pure_entropy_threshold: 81+ candidates
             21,    // entropy_minimax_threshold: 22-80 candidates
-            15,    // hybrid_threshold: 16-21 candidates (TUNED via exhaustive search)
+            15,    // hybrid_threshold: 16-21 candidates
             2,     // minimax_first_threshold: 3-15 candidates (1-2 use Random)
-            0.2,   // minimax_epsilon: candidate preference threshold (TUNED via exhaustive search)
+            0.2,   // minimax_epsilon: candidate preference threshold
             100.0, // hybrid_entropy_weight: entropy coefficient
             10.0,  // hybrid_minimax_penalty: max_partition penalty
         )

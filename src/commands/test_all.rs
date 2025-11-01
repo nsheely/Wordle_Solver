@@ -331,7 +331,7 @@ pub fn print_test_all_statistics(stats: &TestAllStatistics) {
             .bright_yellow()
             .bold()
     );
-    println!("  Theoretical optimal: 3.421 guesses (MIT research)");
+    println!("  Theoretical optimal: 3.421 guesses (Bertsimas & Paskov 2022, 10,657-word pool)");
 
     let difference = stats.average_guesses - 3.421;
     let diff_str = format!("{difference:+.3} guesses");

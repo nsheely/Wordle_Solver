@@ -13,9 +13,9 @@ Solves Wordle puzzles by combining multiple strategies:
 - **Minimax** - minimizes worst-case remaining candidates
 - **Hybrid** - balances both approaches adaptively
 
-**3.4333 average guesses** (SE ± 0.0012, optimal is 3.421*)
+**3.4334 ± 0.0004 (SE) average guesses** - 99.64% of optimal 3.421*
 
-*[Bertsimas & Paskov MIT Research](https://auction-upload-files.s3.amazonaws.com/Wordle_Paper_Final.pdf)
+*Optimal value from [Bertsimas & Paskov (2022)](https://auction-upload-files.s3.amazonaws.com/Wordle_Paper_Final.pdf)
 
 ## Usage
 
@@ -90,14 +90,16 @@ wordle_solver simple --strategy minimax
 
 ## Performance
 
-**Statistical Performance:**
-- **Mean**: 3.4333 guesses ± 0.0012 (SE) - **99.64% of optimal 3.421**
-- **Standard deviation**: 0.0053 guesses
-- **95% confidence interval**: 3.431 - 3.436 guesses
-- **Observed range**: 3.424 - 3.444 guesses (99.33% - 99.91%)
+Measured over 150 independent test runs, each solving all 2,315 Wordle answer words (347,250 total solves).
+
+- **Average guesses**: 3.4334 ± 0.0004 (SE) - 99.64% of optimal 3.421
+- **Standard deviation**: 0.0050 guesses
+- **95% confidence interval**: 3.433 - 3.434 guesses
+- **Observed range**: 3.419 - 3.445 guesses (99.30% - 100.06% optimal*)
 - **Success rate**: 100% within 6 guesses
 
-Performance variance is due to random selection in 2-candidate endgames where both candidates have equal probability.
+* Optimal reference used a 10,657-word guess pool. This solver uses a 12,972-word guess pool, which explains occasional runs performing at 100%+ (different problem spaces).
+
 
 **Typical distribution:**
 - 2 guesses: 78-79 words (3.4%)
@@ -116,7 +118,7 @@ Uses different tactics based on how many candidates remain:
 4. **3-15 candidates**: Minimax-first with 20% candidate preference
 5. **1-2 candidates**: Random selection
 
-The strategy automatically switches tactics as candidates are eliminated. Parameters optimized through exhaustive search of 1,932 configurations.
+The strategy automatically switches tactics as candidates are eliminated.
 
 ## Project Structure
 

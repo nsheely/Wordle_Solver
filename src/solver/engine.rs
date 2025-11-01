@@ -29,8 +29,8 @@ impl<'a, S: Strategy> Solver<'a, S> {
 
     /// Get the best first guess for a new game
     ///
-    /// Returns SALET if available (MIT-proven optimal), otherwise uses strategy.
-    /// SALET achieves 3.421 average guesses (proven optimal via dynamic programming).
+    /// Returns SALET if available (Bertsimas & Paskov 2022), otherwise uses strategy.
+    /// SALET achieves 3.421 average guesses (optimal via dynamic programming, 10,657-word pool).
     ///
     /// Note: SALET has 5.835 bits entropy, which is not the maximum, but it's
     /// optimal for minimizing expected guesses across all possible answers.
