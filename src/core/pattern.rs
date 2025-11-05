@@ -336,4 +336,74 @@ mod tests {
         assert_eq!(pattern.count_greens(), 2); // A and E
         assert_eq!(pattern.count_yellows(), 0); // No yellows
     }
+
+    #[test]
+    fn pattern_excess_duplicates_marked_gray() {
+        // GEESE (3 E's) vs ELDER (2 E's)
+        // G(gray)=0, E(green)=2, E(gray)=0, S(gray)=0, E(yellow)=1
+        // ELDER has E at positions 0 and 3
+        // GEESE pos 1: green match at pos 1 of ELDER? No wait, ELDER is E-L-D-E-R
+        // Let me use clearer words
+        let guess = Word::new("teeth").unwrap();
+        let answer = Word::new("erase").unwrap();
+        // TEETH vs ERASE
+        // ERASE has 2 E's (positions 0 and 4)
+        // TEETH has 3 E's (positions 1, 2, 3)
+        // T(gray)=0, E(yellow)=1, E(yellow)=1, T(gray)=0, H(gray)=0
+        // After using 2 E's for yellows, third E should be gray
+        let pattern = Pattern::calculate(&guess, &answer);
+
+        // T(gray), E(yellow), E(yellow), T(gray), H(gray)
+        // 0 + 1×3 + 1×9 + 0×27 + 0×81 = 12
+        assert_eq!(pattern.value(), 12);
+        assert_eq!(pattern.count_yellows(), 2);
+        assert_eq!(pattern.count_greens(), 0);
+    }
+
+    #[test]
+    fn pattern_one_green_one_yellow_rest_gray() {
+        // Test when same letter appears multiple times:
+        // one correct position (green), one wrong position (yellow), rest gray
+        // Using BABES vs ABYSS
+        let guess = Word::new("babes").unwrap();
+        let answer = Word::new("abyss").unwrap();
+        // ABYSS: A(0), B(1), Y(2), S(3), S(4) - has 1 B, 2 S's
+        // BABES: B(0), A(1), B(2), E(3), S(4)
+        // B at pos 0: yellow (B exists at pos 1 in ABYSS)
+        // A at pos 1: yellow (A exists at pos 0 in ABYSS)
+        // B at pos 2: gray (only 1 B in answer, already used)
+        // E at pos 3: gray (no E in answer)
+        // S at pos 4: green (matches position 4)
+        let pattern = Pattern::calculate(&guess, &answer);
+
+        // B(yellow)=1, A(yellow)=1, B(gray)=0, E(gray)=0, S(green)=2
+        // 1 + 1×3 + 0×9 + 0×27 + 2×81 = 166
+        assert_eq!(pattern.value(), 166);
+        assert_eq!(pattern.count_greens(), 1);
+        assert_eq!(pattern.count_yellows(), 2);
+    }
+
+    #[test]
+    fn pattern_multiple_greens_use_up_available() {
+        // LULLS vs KILLS
+        // KILLS: K(0), I(1), L(2), L(3), S(4) - has 2 L's
+        // LULLS: L(0), U(1), L(2), L(3), S(4) - has 3 L's
+        // L at pos 0: yellow (L exists at positions 2,3 in KILLS)
+        // U at pos 1: gray (no U in KILLS)
+        // L at pos 2: green (matches position 2)
+        // L at pos 3: green (matches position 3)
+        // S at pos 4: green (matches position 4)
+        // Wait, that's 1 yellow + 2 greens = 3 L's total, but KILLS only has 2
+        // After greens take positions 2 and 3, no L's left for yellow at pos 0
+        // So L at pos 0 should be gray!
+        let guess = Word::new("lulls").unwrap();
+        let answer = Word::new("kills").unwrap();
+        let pattern = Pattern::calculate(&guess, &answer);
+
+        // L(gray)=0, U(gray)=0, L(green)=2, L(green)=2, S(green)=2
+        // 0 + 0×3 + 2×9 + 2×27 + 2×81 = 234
+        assert_eq!(pattern.value(), 234);
+        assert_eq!(pattern.count_greens(), 3);
+        assert_eq!(pattern.count_yellows(), 0);
+    }
 }

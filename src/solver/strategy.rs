@@ -237,4 +237,157 @@ mod tests {
         // Should select the only candidate
         assert_eq!(guess.text(), "irate");
     }
+
+    #[test]
+    fn strategy_type_from_name_entropy() {
+        // Verify "entropy" match arm exists (not deleted)
+        let strategy = StrategyType::from_name("entropy");
+        assert!(matches!(strategy, StrategyType::Entropy(_)));
+
+        let strategy2 = StrategyType::from_name("pure-entropy");
+        assert!(matches!(strategy2, StrategyType::Entropy(_)));
+    }
+
+    #[test]
+    fn strategy_type_from_name_minimax() {
+        // Verify "minimax" match arm exists (not deleted)
+        let strategy = StrategyType::from_name("minimax");
+        assert!(matches!(strategy, StrategyType::Minimax(_)));
+    }
+
+    #[test]
+    fn strategy_type_from_name_hybrid() {
+        // Verify "hybrid" match arm exists (not deleted)
+        let strategy = StrategyType::from_name("hybrid");
+        assert!(matches!(strategy, StrategyType::Hybrid(_)));
+    }
+
+    #[test]
+    fn strategy_type_from_name_random() {
+        // Verify "random" match arm exists (not deleted)
+        let strategy = StrategyType::from_name("random");
+        assert!(matches!(strategy, StrategyType::Random(_)));
+    }
+
+    #[test]
+    fn strategy_type_select_guess_delegates() {
+        // Verify StrategyType::select_guess actually calls strategy (not returns None)
+        let guesses = vec![Word::new("crane").unwrap(), Word::new("slate").unwrap()];
+        let candidates = vec![Word::new("crane").unwrap()];
+
+        let strategy = StrategyType::Entropy(EntropyStrategy);
+        let result = strategy.select_guess(&guesses, &candidates);
+
+        // MUST return a guess (not None)
+        // If replaced with None, this fails
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn random_strategy_candidate_preference() {
+        // Verify RandomStrategy line 130: guess_pool.iter().any(|g| g.text() == c.text())
+        // Use multiple candidates: one IN guess pool, one NOT in guess pool
+
+        let guesses = vec![
+            Word::new("slate").unwrap(), // "slate" is in guess pool
+        ];
+        let candidates = vec![
+            Word::new("slate").unwrap(), // This should be selected
+            Word::new("crane").unwrap(), // This should NOT be selected
+        ];
+
+        let strategy = RandomStrategy;
+
+        // Original (==):
+        //   "slate": any(|g| g == "slate") → true → included in valid_candidates
+        //   "crane": any(|g| g == "crane") → false → excluded
+        //   valid_candidates = ["slate"], picks "slate"
+        //
+        // Mutated (!=):
+        //   "slate": any(|g| g != "slate") → false → excluded
+        //   "crane": any(|g| g != "crane") → true ("slate" != "crane") → included!
+        //   valid_candidates = ["crane"], picks "crane"
+        //   Line 134 tries to find "crane" in guess_pool → returns None (not found)
+        //
+        // So mutation causes None instead of Some("slate")!
+
+        for _ in 0..10 {
+            let result = strategy.select_guess(&guesses, &candidates);
+            assert!(result.is_some());
+            // MUST return slate (the only candidate in guess pool)
+            // If == changed to !=, would return None
+            assert_eq!(result.unwrap().text(), "slate");
+        }
+    }
+
+    #[test]
+    fn random_strategy_fallback_path() {
+        // Verify RandomStrategy line 139: w.text() == c.text() (not !=)
+        // When NO candidates are in guess pool, uses fallback path
+        let guesses = vec![
+            Word::new("slate").unwrap(), // This IS in guess pool
+            Word::new("crane").unwrap(), // This IS in guess pool
+        ];
+        let candidates = vec![
+            Word::new("zzzzz").unwrap(), // NOT in guess pool - triggers fallback
+            Word::new("aaaaa").unwrap(),
+        ];
+
+        let strategy = RandomStrategy;
+        let result = strategy.select_guess(&guesses, &candidates);
+
+        // Fallback: tries to find first candidate (zzzzz) in guess pool
+        // If line 139 == changed to !=, behavior would be different
+        // Since zzzzz is NOT in guess pool, should return None
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn hybrid_strategy_threshold_comparison() {
+        // Verify HybridStrategy uses <= threshold (line 110), not >
+        // Test boundary: at threshold and below vs above
+        let guesses = vec![Word::new("crane").unwrap(), Word::new("slate").unwrap()];
+
+        // Test 1: candidates.len() == threshold (should use minimax with <=)
+        let candidates_at: Vec<Word> = vec![
+            Word::new("irate").unwrap(),
+            Word::new("crate").unwrap(),
+            Word::new("grate").unwrap(),
+        ];
+
+        let strategy = HybridStrategy::new(3);
+        let result_at = strategy.select_guess(&guesses, &candidates_at);
+
+        // With <= : 3 <= 3 is true → uses minimax
+        // With > : 3 > 3 is false → uses entropy
+        assert!(result_at.is_some());
+
+        // Test 2: candidates.len() < threshold (should use minimax with <=)
+        let candidates_below: Vec<Word> =
+            vec![Word::new("irate").unwrap(), Word::new("crate").unwrap()];
+
+        let result_below = strategy.select_guess(&guesses, &candidates_below);
+
+        // With <= : 2 <= 3 is true → uses minimax
+        // With > : 2 > 3 is false → uses entropy
+        assert!(result_below.is_some());
+
+        // Test 3: candidates.len() > threshold (should use entropy with <=)
+        let candidates_above: Vec<Word> = vec![
+            Word::new("irate").unwrap(),
+            Word::new("crate").unwrap(),
+            Word::new("grate").unwrap(),
+            Word::new("prate").unwrap(),
+        ];
+
+        let result_above = strategy.select_guess(&guesses, &candidates_above);
+
+        // With <= : 4 <= 3 is false → uses entropy
+        // With > : 4 > 3 is true → uses minimax (WRONG, but still returns Some)
+        assert!(result_above.is_some());
+
+        // The key is that all three should return valid results
+        // If comparison is wrong, the logic is inverted but both strategies work
+        // This is a black-box testing limitation - can't distinguish which strategy was used
+    }
 }

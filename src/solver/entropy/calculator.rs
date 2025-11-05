@@ -231,6 +231,23 @@ mod tests {
     }
 
     #[test]
+    fn shannon_entropy_with_zero_counts() {
+        // HashMap with both zero and non-zero counts
+        // Zero counts should be filtered out
+        let mut counts = HashMap::new();
+        counts.insert(Pattern::new(0), 0); // Zero count
+        counts.insert(Pattern::new(1), 10); // Non-zero
+        counts.insert(Pattern::new(2), 0); // Zero count
+        counts.insert(Pattern::new(3), 10); // Non-zero
+
+        let entropy = shannon_entropy(&counts);
+
+        // Only non-zero counts contribute
+        // Two outcomes with equal probability (10 each) = 1 bit
+        assert!((entropy - 1.0).abs() < 0.001);
+    }
+
+    #[test]
     fn calculate_entropy_real_words() {
         let guess = Word::new("crane").unwrap();
         let candidates = [
@@ -304,5 +321,87 @@ mod tests {
         let non_zero_count = groups.iter().filter(|&&c| c > 0).count();
         assert_eq!(non_zero_count, 2);
         assert_eq!(groups.iter().sum::<usize>(), 2);
+    }
+
+    #[test]
+    fn calculate_metrics_perfect_binary_split() {
+        // Two candidates with perfect 50/50 split
+        let guess = Word::new("slate").unwrap();
+        let candidates = [
+            Word::new("slate").unwrap(), // Perfect match
+            Word::new("zzzzz").unwrap(), // No match
+        ];
+        let candidate_refs: Vec<&Word> = candidates.iter().collect();
+
+        let metrics = calculate_metrics(&guess, &candidate_refs);
+
+        // Entropy: H = -(0.5*log2(0.5) + 0.5*log2(0.5)) = 1.0
+        assert!((metrics.entropy - 1.0).abs() < 0.001);
+
+        // Expected remaining: 0.5*1 + 0.5*1 = 1.0
+        assert!((metrics.expected_remaining - 1.0).abs() < 0.001);
+
+        // Max partition: max(1, 1) = 1
+        assert_eq!(metrics.max_partition, 1);
+    }
+
+    #[test]
+    fn calculate_metrics_skewed_distribution() {
+        // 4 candidates: 1 match + 3 non-matches
+        // If guess produces pattern where 3 candidates have same pattern, 1 different
+        let guess = Word::new("abcde").unwrap();
+        let candidates = [
+            Word::new("fghij").unwrap(), // All gray
+            Word::new("fghik").unwrap(), // All gray
+            Word::new("fghil").unwrap(), // All gray
+            Word::new("abcde").unwrap(), // Perfect match
+        ];
+        let candidate_refs: Vec<&Word> = candidates.iter().collect();
+
+        let metrics = calculate_metrics(&guess, &candidate_refs);
+
+        // Two patterns: 3 candidates (p=0.75), 1 candidate (p=0.25)
+        // Entropy: H = -(0.75*log2(0.75) + 0.25*log2(0.25))
+        //          = -(0.75*-0.415 + 0.25*-2.0)
+        //          = -(-0.311 - 0.5) = 0.811
+        assert!((metrics.entropy - 0.811).abs() < 0.01);
+
+        // Expected remaining: 0.75*3 + 0.25*1 = 2.25 + 0.25 = 2.5
+        assert!((metrics.expected_remaining - 2.5).abs() < 0.001);
+
+        // Max partition: max(3, 1) = 3
+        assert_eq!(metrics.max_partition, 3);
+    }
+
+    #[test]
+    fn calculate_metrics_empty_candidates() {
+        let guess = Word::new("crane").unwrap();
+        let candidates: Vec<&Word> = vec![];
+
+        let metrics = calculate_metrics(&guess, &candidates);
+
+        // Empty candidates → zero metrics
+        assert!((metrics.entropy - 0.0).abs() < f64::EPSILON);
+        assert!((metrics.expected_remaining - 0.0).abs() < f64::EPSILON);
+        assert_eq!(metrics.max_partition, 0);
+    }
+
+    #[test]
+    fn calculate_metrics_single_candidate() {
+        let guess = Word::new("crane").unwrap();
+        let candidates = [Word::new("slate").unwrap()];
+        let candidate_refs: Vec<&Word> = candidates.iter().collect();
+
+        let metrics = calculate_metrics(&guess, &candidate_refs);
+
+        // Single candidate → deterministic outcome
+        // Entropy: H = -(1.0*log2(1.0)) = 0
+        assert!((metrics.entropy - 0.0).abs() < 0.001);
+
+        // Expected remaining: 1.0*1 = 1.0
+        assert!((metrics.expected_remaining - 1.0).abs() < 0.001);
+
+        // Max partition: 1
+        assert_eq!(metrics.max_partition, 1);
     }
 }

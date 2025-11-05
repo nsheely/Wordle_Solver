@@ -256,3 +256,76 @@ fn run_play_command(all_words: &[Word], answer_words: &[Word]) -> Result<()> {
     let app = App::new(all_words, answer_words);
     run_tui(app)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn load_wordlists_all_mode() {
+        // Test "all" mode - should return full wordlist for guessing, answers for targets
+        let result = load_wordlists("all");
+        assert!(result.is_ok());
+
+        let (all_words, answer_words) = result.unwrap();
+
+        // Full wordlist should be larger than answers-only
+        assert!(all_words.len() > answer_words.len());
+        // Should have standard Wordle answer count (2315)
+        assert_eq!(answer_words.len(), 2315);
+        // Should have full allowed word count (12972)
+        assert_eq!(all_words.len(), 12972);
+    }
+
+    #[test]
+    fn load_wordlists_answers_mode() {
+        // Test "answers" mode - both lists should be the same (exploration paradox demo)
+        let result = load_wordlists("answers");
+        assert!(result.is_ok());
+
+        let (all_words, answer_words) = result.unwrap();
+
+        // Both should be equal (answers used for both)
+        assert_eq!(all_words.len(), answer_words.len());
+        assert_eq!(all_words.len(), 2315);
+
+        // Verify they contain the same words
+        assert_eq!(all_words, answer_words);
+    }
+
+    #[test]
+    fn load_wordlists_invalid_path() {
+        // Test with non-existent file path
+        let result = load_wordlists("/nonexistent/path/to/words.txt");
+
+        // Should return an error
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn word_finding_with_equals() {
+        // Test word finding logic (lines 210, 235) uses == correctly
+        let words = [
+            Word::new("crane").unwrap(),
+            Word::new("slate").unwrap(),
+            Word::new("irate").unwrap(),
+        ];
+
+        // Test finding existing word
+        let found = words.iter().find(|w| w.text() == "slate");
+        assert!(found.is_some());
+        assert_eq!(found.unwrap().text(), "slate");
+
+        // Test not finding non-existent word
+        let not_found = words.iter().find(|w| w.text() == "zzzzz");
+        assert!(not_found.is_none());
+
+        // If == changed to !=, behavior would be inverted:
+        // - "slate" would return None (it equals, so != is false)
+        // - "zzzzz" would return first non-matching word
+        let inverted = words.iter().find(|w| w.text() != "slate");
+        // With !=, should return first word that doesn't match
+        assert!(inverted.is_some());
+        assert_eq!(inverted.unwrap().text(), "crane");
+    }
+}

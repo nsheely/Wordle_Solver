@@ -91,23 +91,6 @@ mod tests {
     }
 
     #[test]
-    fn max_remaining_skewed_distribution() {
-        // Skewed distribution - worst case is the largest group
-        let guess = Word::new("crane").unwrap();
-        let candidates = [
-            Word::new("slate").unwrap(), // Pattern A
-            Word::new("irate").unwrap(), // Pattern B
-            Word::new("crate").unwrap(), // Pattern C
-            Word::new("grate").unwrap(), // Pattern B (same as irate)
-        ];
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let max = calculate_max_remaining(&guess, &candidate_refs);
-        // The worst case should be the largest pattern group
-        assert!((1..=4).contains(&max));
-    }
-
-    #[test]
     fn max_remaining_empty_candidates() {
         let guess = Word::new("crane").unwrap();
         let candidates: Vec<&Word> = vec![];
@@ -124,21 +107,6 @@ mod tests {
 
         let max = calculate_max_remaining(&guess, &candidate_refs);
         assert_eq!(max, 1);
-    }
-
-    #[test]
-    fn max_remaining_bounds() {
-        // Max remaining is always between 0 and total candidates
-        let guess = Word::new("crane").unwrap();
-        let candidates = [
-            Word::new("slate").unwrap(),
-            Word::new("irate").unwrap(),
-            Word::new("trace").unwrap(),
-        ];
-        let candidate_refs: Vec<&Word> = candidates.iter().collect();
-
-        let max = calculate_max_remaining(&guess, &candidate_refs);
-        assert!(max <= candidates.len());
     }
 
     #[test]

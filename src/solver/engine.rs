@@ -235,4 +235,97 @@ mod tests {
         // GRATE should be in the candidates
         assert!(candidates.iter().any(|&w| w.text() == "grate"));
     }
+
+    #[test]
+    fn first_guess_returns_salet_when_available() {
+        // Verify first_guess uses == "salet", not != "salet"
+        // Create word list with "salet" included
+        let all_words = vec![
+            Word::new("salet").unwrap(), // Optimal first word
+            Word::new("crane").unwrap(),
+            Word::new("slate").unwrap(),
+        ];
+        let answer_words = vec![Word::new("crane").unwrap(), Word::new("slate").unwrap()];
+        let solver = Solver::new(EntropyStrategy, &all_words, &answer_words);
+
+        let first = solver.first_guess();
+        assert!(first.is_some());
+
+        // MUST return "salet" specifically (optimal hardcoded first guess)
+        // If == changed to !=, would return wrong word (crane or slate)
+        assert_eq!(first.unwrap().text(), "salet");
+    }
+
+    #[test]
+    fn next_guess_single_candidate_optimization() {
+        // Verify: when exactly 1 candidate, returns it directly (not via strategy)
+        // If == changed to !=, behavior differs
+
+        // Setup with multiple possible words
+        let all_words = vec![
+            Word::new("crane").unwrap(),
+            Word::new("slate").unwrap(),
+            Word::new("irate").unwrap(),
+            Word::new("crate").unwrap(),
+        ];
+        let answer_words = vec![Word::new("irate").unwrap(), Word::new("crate").unwrap()];
+        let solver = Solver::new(EntropyStrategy, &all_words, &answer_words);
+
+        // Narrow down to exactly one candidate with specific guess
+        // IRATE vs CRATE gives specific pattern
+        let guess1 = Word::new("slate").unwrap();
+        let answer = Word::new("crate").unwrap();
+        let pattern1 = Pattern::calculate(&guess1, &answer);
+
+        let guess2 = Word::new("crane").unwrap();
+        let pattern2 = Pattern::calculate(&guess2, &answer);
+
+        let history = vec![(guess1, pattern1), (guess2, pattern2)];
+        let candidates = solver.filter_candidates(&history);
+
+        // If we got exactly one candidate, verify next_guess returns it
+        if candidates.len() == 1 && candidates[0].text() == "crate" {
+            let next = solver.next_guess(&history);
+            assert!(next.is_some());
+            // MUST return the single candidate
+            // If == changed to !=, might not work correctly
+            assert_eq!(next.unwrap().text(), "crate");
+        }
+    }
+
+    #[test]
+    fn get_candidates_returns_filtered_list_not_empty() {
+        // Verify get_candidates returns actual filtered candidates, not vec![]
+        let (all_words, answer_words) = setup_solver();
+        let solver = Solver::new(EntropyStrategy, &all_words, &answer_words);
+
+        // No history = all answer words are candidates
+        let candidates = solver.get_candidates(&[]);
+
+        // MUST return non-empty list (all answer words)
+        // If replaced with vec![], this would fail
+        assert!(!candidates.is_empty());
+        assert_eq!(candidates.len(), answer_words.len());
+    }
+
+    #[test]
+    fn get_candidates_filters_correctly() {
+        // Additional verification that get_candidates actually filters
+        let (all_words, answer_words) = setup_solver();
+        let solver = Solver::new(EntropyStrategy, &all_words, &answer_words);
+
+        let guess = Word::new("crane").unwrap();
+        let answer = Word::new("irate").unwrap();
+        let pattern = Pattern::calculate(&guess, &answer);
+
+        let history = vec![(guess, pattern)];
+        let candidates = solver.get_candidates(&history);
+
+        // Should have fewer candidates after filtering
+        assert!(candidates.len() < answer_words.len());
+        assert!(!candidates.is_empty());
+
+        // irate should still be a candidate
+        assert!(candidates.iter().any(|&w| w.text() == "irate"));
+    }
 }

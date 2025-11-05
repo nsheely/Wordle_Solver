@@ -37,13 +37,13 @@ pub struct AdaptiveStrategy {
     /// Candidates > this use `EntropyMinimax` (default: 21)
     pub entropy_minimax_threshold: usize,
 
-    /// Candidates > this use `Hybrid` (default: 9)
+    /// Candidates > this use `Hybrid` (default: 15)
     pub hybrid_threshold: usize,
 
     /// Candidates > this use `MinimaxFirst` (default: 2)
     pub minimax_first_threshold: usize,
 
-    /// Epsilon for `MinimaxFirst` candidate preference (default: 0.1)
+    /// Epsilon for `MinimaxFirst` candidate preference (default: 0.2)
     pub minimax_epsilon: f64,
 
     /// Hybrid scoring: entropy weight (default: 100.0)
