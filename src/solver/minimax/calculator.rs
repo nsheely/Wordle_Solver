@@ -36,7 +36,7 @@ pub fn calculate_max_remaining(guess: &Word, candidates: &[&Word]) -> usize {
     }
 
     // Group candidates by pattern
-    let pattern_counts = group_by_pattern(guess, candidates);
+    let pattern_counts = group_by_pattern(*guess, candidates);
 
     // Return the maximum count (worst case)
     pattern_counts.iter().max().copied().unwrap_or(0)
@@ -46,11 +46,11 @@ pub fn calculate_max_remaining(guess: &Word, candidates: &[&Word]) -> usize {
 ///
 /// Returns an array where each index is a pattern value (0-242)
 /// and the value is the count of candidates producing that pattern.
-fn group_by_pattern(guess: &Word, candidates: &[&Word]) -> [usize; 243] {
+fn group_by_pattern(guess: Word, candidates: &[&Word]) -> [usize; 243] {
     let mut counts = [0usize; 243];
 
     for &candidate in candidates {
-        let pattern = Pattern::calculate(guess, candidate);
+        let pattern = Pattern::calculate(&guess, candidate);
         counts[pattern.value() as usize] += 1;
     }
 
@@ -118,7 +118,7 @@ mod tests {
         ];
         let candidate_refs: Vec<&Word> = candidates.iter().collect();
 
-        let groups = group_by_pattern(&guess, &candidate_refs);
+        let groups = group_by_pattern(guess, &candidate_refs);
 
         // Should have 2 different patterns with 1 candidate each
         let non_zero_count = groups.iter().filter(|&&c| c > 0).count();

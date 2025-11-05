@@ -53,7 +53,7 @@ pub fn run_benchmark<S: Strategy>(
             };
 
             let pattern = Pattern::calculate(guess, target);
-            history.push((guess.clone(), pattern));
+            history.push((*guess, pattern));
 
             if pattern.is_perfect() || guesses >= 6 {
                 break;

@@ -203,7 +203,7 @@ fn benchmark_command<S: Strategy>(
     }
 
     // Take first N words from answer list
-    let test_words: Vec<Word> = answer_words.iter().take(count).cloned().collect();
+    let test_words: Vec<Word> = answer_words.iter().take(count).copied().collect();
 
     // Convert first_word to Word if provided
     let forced_first =

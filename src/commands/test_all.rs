@@ -109,7 +109,7 @@ pub fn run_test_all<S: Strategy>(
             let pattern = Pattern::calculate(guess, answer_word);
 
             // Add to history
-            history.push((guess.clone(), pattern));
+            history.push((*guess, pattern));
         }
 
         let num_guesses = guesses.len();

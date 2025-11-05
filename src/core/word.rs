@@ -6,10 +6,9 @@ use std::fmt;
 
 /// A 5-letter Wordle word
 ///
-/// Stores the word as both a String and a byte array for efficient access.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Stores as byte array; text is reconstructed on-demand.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Word {
-    text: String,
     chars: [u8; 5],
 }
 
@@ -82,14 +81,21 @@ impl Word {
             .try_into()
             .expect("length already validated");
 
-        Ok(Self { text, chars })
+        Ok(Self { chars })
     }
 
     /// Get the word as a string slice
+    ///
+    /// Reconstructs the string from the byte array on-demand.
+    /// This is safe because Word validates ASCII lowercase at construction.
+    ///
+    /// # Panics
+    /// Never panics. The `expect` call is guaranteed safe because Word validates
+    /// ASCII lowercase characters at construction time.
     #[inline]
     #[must_use]
     pub fn text(&self) -> &str {
-        &self.text
+        std::str::from_utf8(&self.chars).expect("Word chars are always valid UTF-8")
     }
 
     /// Get the word as a byte array
@@ -133,7 +139,7 @@ impl Word {
     /// Returns array where index represents the letter (a=0, b=1, ..., z=25)
     /// and the value is the count of that letter in the word.
     #[inline]
-    pub(crate) fn char_counts(&self) -> [u8; 26] {
+    pub(crate) fn char_counts(self) -> [u8; 26] {
         let mut counts = [0u8; 26];
         for &ch in &self.chars {
             counts[(ch - b'a') as usize] += 1;
@@ -144,7 +150,7 @@ impl Word {
 
 impl fmt::Display for Word {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.text)
+        write!(f, "{}", self.text())
     }
 }
 

@@ -80,7 +80,7 @@ pub fn solve_word<S: Strategy>(
         let pattern = Pattern::calculate(guess, &target_word);
 
         // Add to history
-        history.push((guess.clone(), pattern));
+        history.push((*guess, pattern));
 
         let candidates_after = solver.count_candidates(&history);
 

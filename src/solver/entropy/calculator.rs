@@ -47,7 +47,7 @@ pub fn calculate_entropy(guess: &Word, candidates: &[&Word]) -> f64 {
     }
 
     // Group candidates by pattern
-    let pattern_counts = group_by_pattern(guess, candidates);
+    let pattern_counts = group_by_pattern(*guess, candidates);
 
     // Calculate Shannon entropy from array
     shannon_entropy_array(&pattern_counts, candidates.len())
@@ -74,11 +74,11 @@ fn shannon_entropy_array(pattern_counts: &[usize; 243], total: usize) -> f64 {
 }
 
 /// Group candidates by the pattern they produce with the guess
-fn group_by_pattern(guess: &Word, candidates: &[&Word]) -> [usize; 243] {
+fn group_by_pattern(guess: Word, candidates: &[&Word]) -> [usize; 243] {
     let mut counts = [0usize; 243]; // Array for all 243 possible patterns
 
     for &candidate in candidates {
-        let pattern = Pattern::calculate(guess, candidate);
+        let pattern = Pattern::calculate(&guess, candidate);
         counts[pattern.value() as usize] += 1;
     }
 
@@ -140,7 +140,7 @@ pub fn calculate_metrics(guess: &Word, candidates: &[&Word]) -> GuessMetrics {
     }
 
     // Count how many candidates produce each pattern
-    let pattern_counts = group_by_pattern(guess, candidates);
+    let pattern_counts = group_by_pattern(*guess, candidates);
 
     let total = candidates.len() as f64;
     let mut entropy = 0.0;
@@ -315,7 +315,7 @@ mod tests {
         ];
         let candidate_refs: Vec<&Word> = candidates.iter().collect();
 
-        let groups = group_by_pattern(&guess, &candidate_refs);
+        let groups = group_by_pattern(guess, &candidate_refs);
 
         // Should have 2 different patterns with 1 candidate each
         let non_zero_count = groups.iter().filter(|&&c| c > 0).count();

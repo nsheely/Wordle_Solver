@@ -132,7 +132,7 @@ pub fn run_simple<S: Strategy>(solver: &Solver<S>) -> Result<(), String> {
 
         if let Some(pattern) = feedback {
             // Add to history
-            history.push((guess.clone(), pattern));
+            history.push((*guess, pattern));
 
             // Check if solved
             if pattern.is_perfect() {

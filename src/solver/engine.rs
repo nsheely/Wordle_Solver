@@ -70,7 +70,7 @@ impl<'a, S: Strategy> Solver<'a, S> {
         }
 
         // Convert candidates to owned Vec<Word> to avoid lifetime issues
-        let candidate_words: Vec<Word> = candidates.into_iter().cloned().collect();
+        let candidate_words: Vec<Word> = candidates.into_iter().copied().collect();
 
         self.strategy.select_guess(self.all_words, &candidate_words)
     }
@@ -204,7 +204,7 @@ mod tests {
         let guess = Word::new("irate").unwrap();
         let pattern = Pattern::PERFECT;
 
-        let history = vec![(guess.clone(), pattern)];
+        let history = vec![(guess, pattern)];
         let candidates = solver.filter_candidates(&history);
 
         // Should have exactly one candidate: IRATE
