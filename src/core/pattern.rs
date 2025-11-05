@@ -339,18 +339,12 @@ mod tests {
 
     #[test]
     fn pattern_excess_duplicates_marked_gray() {
-        // GEESE (3 E's) vs ELDER (2 E's)
-        // G(gray)=0, E(green)=2, E(gray)=0, S(gray)=0, E(yellow)=1
-        // ELDER has E at positions 0 and 3
-        // GEESE pos 1: green match at pos 1 of ELDER? No wait, ELDER is E-L-D-E-R
-        // Let me use clearer words
-        let guess = Word::new("teeth").unwrap();
-        let answer = Word::new("erase").unwrap();
-        // TEETH vs ERASE
+        // TEETH vs ERASE - when guess has more duplicates than answer
         // ERASE has 2 E's (positions 0 and 4)
         // TEETH has 3 E's (positions 1, 2, 3)
-        // T(gray)=0, E(yellow)=1, E(yellow)=1, T(gray)=0, H(gray)=0
-        // After using 2 E's for yellows, third E should be gray
+        // First 2 E's get yellow, third E gets gray (no more E's available)
+        let guess = Word::new("teeth").unwrap();
+        let answer = Word::new("erase").unwrap();
         let pattern = Pattern::calculate(&guess, &answer);
 
         // T(gray), E(yellow), E(yellow), T(gray), H(gray)
@@ -385,17 +379,11 @@ mod tests {
 
     #[test]
     fn pattern_multiple_greens_use_up_available() {
-        // LULLS vs KILLS
-        // KILLS: K(0), I(1), L(2), L(3), S(4) - has 2 L's
-        // LULLS: L(0), U(1), L(2), L(3), S(4) - has 3 L's
-        // L at pos 0: yellow (L exists at positions 2,3 in KILLS)
-        // U at pos 1: gray (no U in KILLS)
-        // L at pos 2: green (matches position 2)
-        // L at pos 3: green (matches position 3)
-        // S at pos 4: green (matches position 4)
-        // Wait, that's 1 yellow + 2 greens = 3 L's total, but KILLS only has 2
-        // After greens take positions 2 and 3, no L's left for yellow at pos 0
-        // So L at pos 0 should be gray!
+        // LULLS vs KILLS - greens consume available letters first
+        // KILLS has 2 L's (positions 2, 3)
+        // LULLS has 3 L's (positions 0, 2, 3)
+        // Greens at pos 2 and 3 consume both L's from KILLS
+        // L at pos 0 gets gray (no L's remaining for yellow)
         let guess = Word::new("lulls").unwrap();
         let answer = Word::new("kills").unwrap();
         let pattern = Pattern::calculate(&guess, &answer);
