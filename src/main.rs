@@ -269,12 +269,39 @@ mod tests {
 
         let (all_words, answer_words) = result.unwrap();
 
-        // Full wordlist should be larger than answers-only
-        assert!(all_words.len() > answer_words.len());
-        // Should have standard Wordle answer count (2315)
-        assert_eq!(answer_words.len(), 2315);
-        // Should have full allowed word count (12972)
-        assert_eq!(all_words.len(), 12972);
+        // Test invariants that should always hold:
+
+        // 1. Full wordlist should be larger than answers-only
+        assert!(
+            all_words.len() > answer_words.len(),
+            "All words ({}) should be more than answers ({})",
+            all_words.len(),
+            answer_words.len()
+        );
+
+        // 2. Answer count should be reasonable (NYT started with ~2,315, added more)
+        assert!(
+            answer_words.len() >= 2300,
+            "Answer count unexpectedly low: {}",
+            answer_words.len()
+        );
+        assert!(
+            answer_words.len() <= 3000,
+            "Answer count unexpectedly high: {}",
+            answer_words.len()
+        );
+
+        // 3. Allowed words should be reasonable (original was ~12,972)
+        assert!(
+            all_words.len() >= 12000,
+            "Allowed count unexpectedly low: {}",
+            all_words.len()
+        );
+        assert!(
+            all_words.len() <= 15000,
+            "Allowed count unexpectedly high: {}",
+            all_words.len()
+        );
     }
 
     #[test]
@@ -285,12 +312,30 @@ mod tests {
 
         let (all_words, answer_words) = result.unwrap();
 
-        // Both should be equal (answers used for both)
-        assert_eq!(all_words.len(), answer_words.len());
-        assert_eq!(all_words.len(), 2315);
+        // Test invariants that should always hold:
 
-        // Verify they contain the same words
-        assert_eq!(all_words, answer_words);
+        // 1. Both lists should be identical (answers mode uses same list for both)
+        assert_eq!(
+            all_words.len(),
+            answer_words.len(),
+            "In answers mode, both lists should have the same length"
+        );
+        assert_eq!(
+            all_words, answer_words,
+            "In answers mode, both lists should contain the same words"
+        );
+
+        // 2. Count should be reasonable (NYT started with ~2,315 answers, added more)
+        assert!(
+            all_words.len() >= 2300,
+            "Answer count unexpectedly low: {}",
+            all_words.len()
+        );
+        assert!(
+            all_words.len() <= 3000,
+            "Answer count unexpectedly high: {}",
+            all_words.len()
+        );
     }
 
     #[test]

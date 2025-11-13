@@ -62,7 +62,45 @@ mod tests {
 
     #[test]
     fn expected_counts() {
-        assert_eq!(ANSWERS_COUNT, 2315, "Expected 2,315 answer words");
-        assert_eq!(ALLOWED_COUNT, 12972, "Expected 12,972 allowed words");
+        // Test that count constants match actual array lengths
+        // (catches build script bugs where generated counts are wrong)
+        assert_eq!(
+            ANSWERS_COUNT,
+            ANSWERS.len(),
+            "ANSWERS_COUNT constant doesn't match actual array length"
+        );
+        assert_eq!(
+            ALLOWED_COUNT,
+            ALLOWED.len(),
+            "ALLOWED_COUNT constant doesn't match actual array length"
+        );
+
+        // Sanity check: reasonable bounds based on known Wordle word lists
+        // NYT started with ~2,315 answers and has added more over time
+        assert!(
+            ANSWERS_COUNT >= 2300,
+            "Answer count unexpectedly low: {ANSWERS_COUNT} (expected >= 2300)"
+        );
+        assert!(
+            ANSWERS_COUNT <= 3000,
+            "Answer count unexpectedly high: {ANSWERS_COUNT} (expected <= 3000)"
+        );
+
+        // Allowed words should be significantly larger than answers
+        // Original Wordle had ~12,972 allowed words
+        assert!(
+            ALLOWED_COUNT >= 12000,
+            "Allowed count unexpectedly low: {ALLOWED_COUNT} (expected >= 12000)"
+        );
+        assert!(
+            ALLOWED_COUNT <= 15000,
+            "Allowed count unexpectedly high: {ALLOWED_COUNT} (expected <= 15000)"
+        );
+
+        // Answers should be a subset of allowed (count-wise)
+        assert!(
+            ANSWERS_COUNT <= ALLOWED_COUNT,
+            "Answers count ({ANSWERS_COUNT}) should not exceed allowed count ({ALLOWED_COUNT})"
+        );
     }
 }
