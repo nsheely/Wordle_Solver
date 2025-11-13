@@ -62,45 +62,46 @@ mod tests {
 
     #[test]
     fn expected_counts() {
+        let answers_len = ANSWERS.len();
+        let allowed_len = ALLOWED.len();
+
         // Test that count constants match actual array lengths
         // (catches build script bugs where generated counts are wrong)
         assert_eq!(
-            ANSWERS_COUNT,
-            ANSWERS.len(),
+            ANSWERS_COUNT, answers_len,
             "ANSWERS_COUNT constant doesn't match actual array length"
         );
         assert_eq!(
-            ALLOWED_COUNT,
-            ALLOWED.len(),
+            ALLOWED_COUNT, allowed_len,
             "ALLOWED_COUNT constant doesn't match actual array length"
         );
 
         // Sanity check: reasonable bounds based on known Wordle word lists
         // NYT started with ~2,315 answers and has added more over time
         assert!(
-            ANSWERS_COUNT >= 2300,
-            "Answer count unexpectedly low: {ANSWERS_COUNT} (expected >= 2300)"
+            answers_len >= 2300,
+            "Answer count unexpectedly low: {answers_len} (expected >= 2300)"
         );
         assert!(
-            ANSWERS_COUNT <= 3000,
-            "Answer count unexpectedly high: {ANSWERS_COUNT} (expected <= 3000)"
+            answers_len <= 3000,
+            "Answer count unexpectedly high: {answers_len} (expected <= 3000)"
         );
 
         // Allowed words should be significantly larger than answers
         // Original Wordle had ~12,972 allowed words
         assert!(
-            ALLOWED_COUNT >= 12000,
-            "Allowed count unexpectedly low: {ALLOWED_COUNT} (expected >= 12000)"
+            allowed_len >= 12000,
+            "Allowed count unexpectedly low: {allowed_len} (expected >= 12000)"
         );
         assert!(
-            ALLOWED_COUNT <= 15000,
-            "Allowed count unexpectedly high: {ALLOWED_COUNT} (expected <= 15000)"
+            allowed_len <= 15000,
+            "Allowed count unexpectedly high: {allowed_len} (expected <= 15000)"
         );
 
         // Answers should be a subset of allowed (count-wise)
         assert!(
-            ANSWERS_COUNT <= ALLOWED_COUNT,
-            "Answers count ({ANSWERS_COUNT}) should not exceed allowed count ({ALLOWED_COUNT})"
+            answers_len <= allowed_len,
+            "Answers count ({answers_len}) should not exceed allowed count ({allowed_len})"
         );
     }
 }
