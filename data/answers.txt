@@ -117,8 +117,10 @@ aside
 askew
 assay
 asset
+atlas
 atoll
 atone
+atria
 attic
 audio
 audit
@@ -147,6 +149,7 @@ baggy
 baker
 baler
 balmy
+balsa
 banal
 banjo
 barge
@@ -167,6 +170,7 @@ beach
 beady
 beard
 beast
+beaut
 beech
 beefy
 befit
@@ -858,6 +862,7 @@ girly
 girth
 given
 giver
+gizmo
 glade
 gland
 glare
@@ -877,6 +882,7 @@ glyph
 gnash
 gnome
 godly
+gofer
 going
 golem
 golly
@@ -909,6 +915,7 @@ greed
 green
 greet
 grief
+grift
 grill
 grime
 grimy
@@ -927,6 +934,7 @@ grown
 gruel
 gruff
 grunt
+guano
 guard
 guava
 guess
@@ -1030,6 +1038,7 @@ inane
 inbox
 incur
 index
+indie
 inept
 inert
 infer
@@ -1070,7 +1079,9 @@ juror
 kappa
 karma
 kayak
+kazoo
 kebab
+kefir
 khaki
 kinky
 kiosk
@@ -1080,6 +1091,7 @@ knave
 knead
 kneed
 kneel
+knell
 knelt
 knife
 knock
@@ -1098,6 +1110,7 @@ lapel
 lapse
 large
 larva
+laser
 lasso
 latch
 later
@@ -1152,6 +1165,7 @@ logic
 login
 loopy
 loose
+loris
 lorry
 loser
 louse
@@ -1205,6 +1219,7 @@ mason
 masse
 match
 matey
+matte
 mauve
 maxim
 maybe
@@ -1248,6 +1263,7 @@ mogul
 moist
 molar
 moldy
+mommy
 money
 month
 moody
@@ -1294,6 +1310,7 @@ needy
 neigh
 nerdy
 nerve
+nervy
 never
 newer
 newly
@@ -1415,6 +1432,7 @@ pinch
 piney
 pinky
 pinto
+pious
 piper
 pique
 pitch
@@ -1469,6 +1487,7 @@ pride
 pried
 prime
 primo
+primp
 print
 prior
 prism
@@ -1814,6 +1833,7 @@ smoke
 smoky
 smote
 snack
+snafu
 snail
 snake
 snaky
@@ -1851,6 +1871,7 @@ spank
 spare
 spark
 spasm
+spate
 spawn
 speak
 spear
@@ -1893,6 +1914,7 @@ spurt
 squad
 squat
 squib
+squid
 stack
 staff
 stage
@@ -1959,6 +1981,7 @@ stunk
 stunt
 style
 suave
+suede
 sugar
 suing
 suite
@@ -2018,6 +2041,7 @@ taste
 tasty
 tatty
 taunt
+taupe
 tawny
 teach
 teary
@@ -2066,10 +2090,12 @@ tight
 tilde
 timer
 timid
+tinge
 tipsy
 titan
 tithe
 title
+tizzy
 toast
 today
 toddy
@@ -2178,6 +2204,7 @@ usual
 usurp
 utile
 utter
+uvula
 vague
 valet
 valid
