@@ -34,6 +34,10 @@ struct Cli {
     /// Wordlist: 'all' (default, 12972 words), 'answers' (2315 only), or path to file
     #[arg(short = 'w', long, global = true, default_value = "all")]
     wordlist: String,
+
+    /// Skip the silent NYT lookup that adds today's word to in-memory lists
+    #[arg(long, global = true, env = "WORDLE_SOLVER_OFFLINE")]
+    no_network: bool,
 }
 
 #[derive(Subcommand)]
@@ -116,10 +120,20 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // Load word lists based on -w flag
-    let (all_words, answer_words) = load_wordlists(&cli.wordlist)?;
+    let (mut all_words, mut answer_words) = load_wordlists(&cli.wordlist)?;
 
     // Default to Play mode if no command given
     let command = cli.command.unwrap_or(Commands::Play);
+
+    // Silent NYT safety net: only for interactive modes, only on canonical
+    // wordlists, only when the user hasn't opted out. Keeps deterministic
+    // commands (solve/benchmark/analyze/test-all) reproducible.
+    if matches!(command, Commands::Play | Commands::Simple)
+        && (cli.wordlist == "all" || cli.wordlist == "answers")
+        && !cli.no_network
+    {
+        wordle_solver::wordlists::nyt::fetch_and_merge_today(&mut all_words, &mut answer_words);
+    }
 
     match command {
         Commands::Play => run_play_command(&all_words, &answer_words),

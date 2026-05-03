@@ -4,6 +4,7 @@
 
 mod embedded;
 pub mod loader;
+pub mod nyt;
 
 pub use embedded::{ALLOWED, ALLOWED_COUNT, ANSWERS, ANSWERS_COUNT};
 

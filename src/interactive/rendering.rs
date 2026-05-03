@@ -245,13 +245,16 @@ fn render_info_panel(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_search_progress(f: &mut Frame, app: &App, area: Rect) {
-    let total_bits = 11.18; // log2(2315) - maximum entropy
+    // Track the live answer pool size, not a baked-in 2315: the embedded list
+    // grows as NYT adds answers, and the runtime safety net can append today's
+    // word at startup. A stale constant produced a slightly-negative
+    // bits_gained at game start, which formatted as the surprising "-0.0".
+    let initial_candidates = app.answer_words.len() as f64;
+    let total_bits = initial_candidates.log2();
     let current_candidates = app.get_candidates_count();
 
-    // Calculate actual information gained: log2(initial) - log2(current)
-    let initial_candidates = 2315_f64;
     let bits_gained = if current_candidates > 0 {
-        initial_candidates.log2() - (current_candidates as f64).log2()
+        (initial_candidates.log2() - (current_candidates as f64).log2()).max(0.0)
     } else {
         // Solved: gained all bits
         total_bits
@@ -276,7 +279,7 @@ fn render_search_progress(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_messages(f: &mut Frame, app: &App, area: Rect) {
-    let messages: Vec<ListItem> = app
+    let lines: Vec<Line> = app
         .messages
         .iter()
         .rev()
@@ -287,14 +290,15 @@ fn render_messages(f: &mut Frame, app: &App, area: Rect) {
                 MessageStyle::Success => Style::default().fg(Color::Green),
                 MessageStyle::Error => Style::default().fg(Color::Red),
             };
-            ListItem::new(msg.text.clone()).style(style)
+            Line::from(Span::styled(msg.text.clone(), style))
         })
         .collect();
 
-    let messages_list =
-        List::new(messages).block(Block::default().title(" Messages ").borders(Borders::ALL));
+    let messages_panel = Paragraph::new(lines)
+        .block(Block::default().title(" Messages ").borders(Borders::ALL))
+        .wrap(Wrap { trim: false });
 
-    f.render_widget(messages_list, area);
+    f.render_widget(messages_panel, area);
 }
 
 fn render_input(f: &mut Frame, app: &App, area: Rect) {

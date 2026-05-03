@@ -339,6 +339,7 @@ caput
 carat
 cargo
 carol
+carom
 carry
 carve
 caste
@@ -432,6 +433,7 @@ coach
 coast
 cobra
 cocoa
+colic
 colon
 color
 comet
@@ -503,6 +505,7 @@ crush
 crust
 crypt
 cubic
+cubit
 cumin
 curio
 curly
@@ -948,6 +951,7 @@ gulch
 gully
 gumbo
 gummy
+gunky
 guppy
 gusto
 gusty
@@ -1017,6 +1021,7 @@ hurry
 husky
 hussy
 hutch
+hydra
 hydro
 hyena
 hymen
@@ -1266,6 +1271,7 @@ moldy
 mommy
 money
 month
+mooch
 moody
 moose
 moral
@@ -1338,6 +1344,7 @@ nutty
 nylon
 nymph
 oaken
+oasis
 obese
 occur
 ocean
@@ -1355,6 +1362,7 @@ ombre
 omega
 onion
 onset
+oomph
 opera
 opine
 opium
@@ -1761,6 +1769,7 @@ shout
 shove
 shown
 showy
+shred
 shrew
 shrub
 shrug
@@ -1779,6 +1788,7 @@ sinew
 singe
 siren
 sissy
+sitar
 sixth
 sixty
 skate
@@ -2097,6 +2107,7 @@ titan
 tithe
 title
 tizzy
+toady
 toast
 today
 toddy

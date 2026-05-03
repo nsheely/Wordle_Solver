@@ -220,7 +220,7 @@ mod tests {
         assert_eq!(word.positions_of(b'c'), &[0]);
         assert_eq!(word.positions_of(b'r'), &[1]);
         assert_eq!(word.positions_of(b'a'), &[2]);
-        assert_eq!(word.positions_of(b'z'), &[]);
+        assert_eq!(word.positions_of(b'z'), &[] as &[usize]);
     }
 
     #[test]

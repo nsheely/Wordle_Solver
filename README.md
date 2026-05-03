@@ -6,6 +6,8 @@
 
 A Wordle solver in Rust using information theory and game theory to achieve near optimal performance.
 
+![Wordle Solver TUI demo](assets/demo.gif)
+
 ## What It Does
 
 Solves Wordle puzzles by combining multiple strategies:
@@ -69,7 +71,7 @@ wordle_solver analyze SALET
 wordle_solver benchmark --count 100
 ```
 
-**Test all answers** - Full evaluation on all 2,315 words:
+**Test all answers** - Full evaluation on every word in the answer list:
 ```bash
 wordle_solver test-all
 ```
@@ -90,7 +92,7 @@ wordle_solver simple --strategy minimax
 
 ## Performance
 
-Measured over 150 independent test runs, each solving all 2,315 Wordle answer words (347,250 total solves).
+Measured over 150 independent test runs, each solving all 2,315\* Wordle answer words (347,250\* total solves).
 
 - **Average guesses**: 3.4334 ± 0.0004 (SE) - 99.64% of optimal 3.421
 - **Standard deviation**: 0.0050 guesses
@@ -98,7 +100,7 @@ Measured over 150 independent test runs, each solving all 2,315 Wordle answer wo
 - **Observed range**: 3.419 - 3.445 guesses (99.30% - 100.06% optimal*)
 - **Success rate**: 100% within 6 guesses
 
-* Optimal reference used a 10,657-word guess pool. This solver uses a 12,972-word guess pool, which explains occasional runs performing at 100%+ (different problem spaces).
+\* Counts above (2,315 answers, 12,972 allowed) reflect the wordlist as of the benchmark run; NYT has since added more answers, so current totals run slightly higher. The "100%+ optimal" outliers come from this solver's larger guess pool: the optimal reference paper used a 10,657-word pool, while this solver used 12,972 — different problem spaces.
 
 
 **Typical distribution:**

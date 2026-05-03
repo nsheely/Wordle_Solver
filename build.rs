@@ -15,7 +15,7 @@ fn main() {
         "data/answers.txt",
         &Path::new(&out_dir).join("answers.rs"),
         "ANSWERS",
-        "Official Wordle answer words (2,315 words)",
+        "Official Wordle answer words",
     );
 
     // Generate allowed list (complete set)
@@ -23,7 +23,7 @@ fn main() {
         "data/allowed_complete.txt",
         &Path::new(&out_dir).join("allowed.rs"),
         "ALLOWED",
-        "All allowed guessable words (12,972 words)",
+        "All allowed guessable words",
     );
 
     // Rebuild if word lists change
