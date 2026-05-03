@@ -437,10 +437,8 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, mut app: Ap
                             app.input_mode = InputMode::Feedback;
                             app.manual_word.clear();
                         }
-                        KeyCode::Char(c) => {
-                            if app.manual_word.len() < 5 && c.is_alphabetic() {
-                                app.manual_word.push(c.to_ascii_lowercase());
-                            }
+                        KeyCode::Char(c) if app.manual_word.len() < 5 && c.is_alphabetic() => {
+                            app.manual_word.push(c.to_ascii_lowercase());
                         }
                         KeyCode::Backspace => {
                             app.manual_word.pop();

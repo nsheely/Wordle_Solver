@@ -251,11 +251,9 @@ pub fn print_test_all_statistics(stats: &TestAllStatistics) {
         let count = stats.guess_distribution.get(&guesses).unwrap_or(&0);
         if stats.solved > 0 {
             let percentage = *count as f64 / stats.solved as f64 * 100.0;
-            let bar_len = if max_count > 0 {
-                (*count * 40 / max_count).max(usize::from(*count > 0))
-            } else {
-                0
-            };
+            let bar_len = (*count * 40)
+                .checked_div(max_count)
+                .map_or(0, |v| v.max(usize::from(*count > 0)));
             let bar = format!(
                 "{}{}",
                 "█".repeat(bar_len).green(),
